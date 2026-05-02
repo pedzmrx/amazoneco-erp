@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyType {
+  GENERATOR    // Fábricas do PIM (Ex: Samsung, Honda)
+  TRANSPORTER  // Empresas de Logística/Balsas
+  DESTINATOR   // Recicladoras/Aterros
+}
+
+enum ManifestStatus {
+  PENDING
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+model Company {
+  id            String      @id @default(uuid())
+  name          String
+  cnpj          String      @unique
+  type          CompanyType
+  address       String
+  licenseNumber String?     
+  createdAt     DateTime    @default(now())
+  
+  manifestsAsGenerator   Manifest[] @relation("GeneratorRelation")
+  manifestsAsTransporter Manifest[] @relation("TransporterRelation")
+  manifestsAsDestinator  Manifest[] @relation("DestinatorRelation")
+}
+
+model WasteItem {
+  id          String   @id @default(uuid())
+  description String   
+  class       String   // NBR 10.004
+  unit        String   
+  manifests   Manifest[]
+}
+
+model Manifest {
+  id            String         @id @default(uuid())
+  status        ManifestStatus @default(PENDING)
+  weight        Float
+  issuedAt      DateTime       @default(now())
+  completedAt   DateTime?
+  
+  generator     Company        @relation("GeneratorRelation", fields: [generatorId], references: [id])
+  generatorId   String
+  
+  transporter   Company        @relation("TransporterRelation", fields: [transporterId], references: [id])
+  transporterId String
+  
+  destinator    Company        @relation("DestinatorRelation", fields: [destinatorId], references: [id])
+  destinatorId  String
+
+  wasteItem     WasteItem      @relation(fields: [wasteItemId], references: [id])
+  wasteItemId   String
+}
