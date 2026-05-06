@@ -7,30 +7,30 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 export class CompaniesService {
   constructor(private prisma: PrismaService) {}
 
-  create(createCompanyDto: CreateCompanyDto) {
+  async create(createCompanyDto: CreateCompanyDto) {
     return this.prisma.company.create({
       data: createCompanyDto,
     });
   }
 
-  findAll() {
+  async findAll() {
     return this.prisma.company.findMany();
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     return this.prisma.company.findUnique({
       where: { id },
     });
   }
 
-  update(id: string, updateCompanyDto: UpdateCompanyDto) {
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
     return this.prisma.company.update({
       where: { id },
       data: updateCompanyDto,
     });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
     return this.prisma.company.delete({
       where: { id },
     });

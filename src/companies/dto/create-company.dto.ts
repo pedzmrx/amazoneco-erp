@@ -9,18 +9,18 @@ export enum CompanyType {
 export class CreateCompanyDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  cnpj: string;
+  cnpj!: string;
 
   @IsEnum(CompanyType)
-  type: CompanyType;
+  type!: CompanyType;
 
   @IsString()
   @IsNotEmpty()
-  address: string;
+  address!: string;
 
   @IsString()
   @IsOptional()
