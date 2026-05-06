@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateManifestDto } from './dto/create-manifest.dto';
+import { FindManifestsQueryDto } from './dto/find-manifests-query.dto';
 
 @Injectable()
 export class ManifestsService {
@@ -16,8 +17,8 @@ export class ManifestsService {
         destinator: { connect: { id: destinatorId } },
         items: {
           create: items.map((item) => ({
-            wasteItem: { connect: { id: item.wasteItemId } },
             quantity: item.quantity,
+            wasteItem: { connect: { id: item.wasteItemId } },
           })),
         },
       },
@@ -32,8 +33,39 @@ export class ManifestsService {
     });
   }
 
-  async findAll() {
-    return this.prisma.manifest.findMany({
+  async findAll(query: FindManifestsQueryDto) {
+  const { status, companyId, startDate, endDate } = query;
+
+  return this.prisma.manifest.findMany({
+    where: {
+      ...(status && { status }),
+      ...(companyId && {
+        OR: [
+          { generatorId: companyId },
+          { transporterId: companyId },
+          { destinatorId: companyId },
+        ],
+      }),
+      ...((startDate || endDate) && {
+        issuedAt: {
+          ...(startDate && { gte: new Date(startDate) }), 
+          ...(endDate && { lte: new Date(endDate) }),
+        },
+      }),
+    },
+    include: {
+      generator: true,
+      transporter: true,
+      destinator: true,
+      items: { include: { wasteItem: true } },
+    },
+    orderBy: { issuedAt: 'desc' },
+  });
+}
+
+  async findOne(id: string) {
+    const manifest = await this.prisma.manifest.findUnique({
+      where: { id },
       include: {
         generator: true,
         transporter: true,
@@ -43,11 +75,24 @@ export class ManifestsService {
         },
       },
     });
+
+    if (!manifest) throw new NotFoundException('Manifesto não encontrado');
+    return manifest;
   }
 
-  async findOne(id: string) {
-    return this.prisma.manifest.findUnique({
+  async complete(id: string) {
+    const manifest = await this.findOne(id);
+
+    if (manifest.status === 'COMPLETED') {
+      throw new BadRequestException('Este manifesto já foi finalizado anteriormente.');
+    }
+
+    return this.prisma.manifest.update({
       where: { id },
+      data: {
+        status: 'COMPLETED',
+        completedAt: new Date(),
+      },
       include: {
         generator: true,
         transporter: true,
