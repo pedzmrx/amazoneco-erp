@@ -19,9 +19,9 @@ let AuthService = class AuthService {
         this.usersService = usersService;
         this.jwtService = jwtService;
     }
-    async login(email, pass) {
+    async login(email, password) {
         const user = await this.usersService.findByEmail(email);
-        if (user && (await bcrypt.compare(pass, user.password))) {
+        if (user && (await bcrypt.compare(password, user.password))) {
             const payload = { sub: user.id, email: user.email };
             return {
                 access_token: this.jwtService.sign(payload),
