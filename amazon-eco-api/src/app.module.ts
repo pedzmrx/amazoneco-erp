@@ -6,6 +6,7 @@ import { ManifestsModule } from './manifests/manifests.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ManifestosModule } from './manifestos/manifestos.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
     ManifestsModule,
     UsersModule,
     AuthModule,
+    ManifestosModule,
   ],
   controllers: [],
   providers: [],

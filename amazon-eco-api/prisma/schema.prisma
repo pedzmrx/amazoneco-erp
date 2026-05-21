@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum CompanyType {
-  GENERATOR // Fábricas do PIM (Ex: Samsung, Honda)
+  GENERATOR // Fábricas do PIM
   TRANSPORTER // Empresas de Logística/Balsas
   DESTINATOR // Recicladoras/Aterros
 }
@@ -79,4 +79,28 @@ model User {
   role     String @default("USER")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  manifestos Manifesto[]
+}
+
+enum StatusManifesto {
+  EMITIDO
+  EM_TRANSITO
+  RECEBIDO
+  DESTINADO
+}
+
+model Manifesto {
+  id            String          @id @default(uuid())
+  numeroMtr     String          @unique // Número oficial do documento ambiental
+  empresa       String          // Nome da empresa geradora
+  tipoResiduo   String          // Tipo de material 
+  quantidade    Float           // Peso em Kg ou Toneladas
+  status        StatusManifesto @default(EMITIDO)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  criadoPorId   String
+  criadoPor     User            @relation(fields: [criadoPorId], references: [id])
+
+  @@map("manifestos")
 }
