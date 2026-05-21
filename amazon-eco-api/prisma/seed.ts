@@ -4,35 +4,57 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  const emailAdmin = 'admin@amazoneco.com.br'; 
-  const senhaPlana = 'Admin@Eco2026';         
+  await prisma.manifesto.deleteMany({});
+  await prisma.user.deleteMany({});
 
-  const usuarioExistente = await prisma.user.findUnique({
-    where: { email: emailAdmin },
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+
+  const admin = await prisma.user.create({
+    data: {
+      name: 'Erick Eco Admin',
+      email: 'admin@amazoneco.com',
+      password: hashedPassword,
+      role: 'ADMIN',
+    },
   });
 
-  if (!usuarioExistente) {
-    const senhaCriptografada = await bcrypt.hash(senhaPlana, 10);
+  console.log('Usuário administrador criado com sucesso!');
 
-    await prisma.user.create({
-      data: {
-        name: 'Administrador Amazon Eco',
-        email: emailAdmin,
-        password: senhaCriptografada,
-        role: 'ADMIN', 
+  await prisma.manifesto.createMany({
+    data: [
+      {
+        numeroMtr: 'MTR-2026-908123',
+        empresa: 'Samsung Eletrônicos da Amazônia',
+        tipoResiduo: 'Sucata Eletrônica (Placas/Circuitos)',
+        quantidade: 1250.5,
+        status: 'EMITIDO',
+        criadoPorId: admin.id,
       },
-    });
+      {
+        numeroMtr: 'MTR-2026-443219',
+        empresa: 'Moto Honda da Amazônia',
+        tipoResiduo: 'Óleos Lubrificantes Usados',
+        quantidade: 850.0,
+        status: 'EM_TRANSITO',
+        criadoPorId: admin.id,
+      },
+      {
+        numeroMtr: 'MTR-2026-771102',
+        empresa: 'Panasonic do Brasil',
+        tipoResiduo: 'Pilhas e Baterias Industriais',
+        quantidade: 2100.2,
+        status: 'RECEBIDO',
+        criadoPorId: admin.id,
+      },
+    ],
+  });
 
-    console.log('Usuário administrador criado com sucesso via Seed!');
-    console.log(`Logins: ${emailAdmin} | Senha: ${senhaPlana}`);
-  } else {
-    console.log('O usuário administrador já existe no banco de dados.');
-  }
+  console.log('Banco de dados populado com 3 Manifestos de teste!');
 }
 
 main()
   .catch((e) => {
-    console.error('Erro ao rodar o seed:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

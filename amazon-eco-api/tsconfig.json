@@ -5,11 +5,14 @@
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": "./",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "ignoreDeprecations": "5.0"
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]

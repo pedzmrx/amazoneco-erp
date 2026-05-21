@@ -1,34 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ManifestosService } from './manifestos.service';
-import { CreateManifestoDto } from './dto/create-manifesto.dto';
-import { UpdateManifestoDto } from './dto/update-manifesto.dto';
+import { AuthGuard } from '@nestjs/passport'; 
 
 @Controller('manifestos')
 export class ManifestosController {
   constructor(private readonly manifestosService: ManifestosService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Body() createManifestoDto: CreateManifestoDto) {
-    return this.manifestosService.create(createManifestoDto);
+  async create(@Body() createManifestoDto: any, @Request() req: any) {
+    const userId = req.user.userId;
+    return this.manifestosService.create(createManifestoDto, userId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll() {
+  async findAll() {
     return this.manifestosService.findAll();
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.manifestosService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateManifestoDto: UpdateManifestoDto) {
-    return this.manifestosService.update(+id, updateManifestoDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.manifestosService.remove(+id);
+  async findOne(@Param('id') id: string) {
+    return this.manifestosService.findOne(id);
   }
 }
