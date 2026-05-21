@@ -1,27 +1,19 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { CompaniesModule } from './companies/companies.module';
-import { WasteItemsModule } from './waste-items/waste-items.module';
-import { ManifestsModule } from './manifests/manifests.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { ManifestosModule } from './manifestos/manifestos.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { ManifestosModule } from './manifestos/manifestos.module'; 
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    PrismaModule,
-    CompaniesModule,
-    WasteItemsModule,
-    ManifestsModule,
-    UsersModule,
-    AuthModule,
-    ManifestosModule,
+    PrismaModule, 
+    AuthModule, 
+    UsersModule, 
+    ManifestosModule
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

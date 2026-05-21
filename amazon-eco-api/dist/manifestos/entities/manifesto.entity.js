@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Manifest = void 0;
-class Manifest {
+exports.Manifesto = void 0;
+class Manifesto {
 }
-exports.Manifest = Manifest;
+exports.Manifesto = Manifesto;
