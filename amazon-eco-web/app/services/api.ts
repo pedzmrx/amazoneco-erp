@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://special-happiness-wr5pvrqr5v75h555j-3000.app.github.dev', 
+  baseURL: 'http://127.0.0.1:3002', 
   headers: {
     'Content-Type': 'application/json',
   },

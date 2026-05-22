@@ -12,36 +12,34 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+async function handleLogin(e: React.FormEvent) {
+  e.preventDefault(); 
 
-    try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-      });
+  setLoading(true);
+  setError('');
 
-      const { access_token } = response.data;
+  try {
+    const response = await api.post('/auth/login', { 
+      email, 
+      password 
+    });
 
-      localStorage.setItem('@amazon-eco:token', access_token);
-
-      
-      document.cookie = `@amazon-eco:token=${access_token}; path=/; max-age=86400; SameSite=Strict`;
-
-      router.push('/dashboard');
-    } catch (err: any) {
-      console.error('Erro na autenticação:', err);
-       
-      setError(
-        err.response?.data?.message || 
-        'Erro ao conectar com o servidor. Verifique suas credenciais.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { token } = response.data;
+    
+    localStorage.setItem('@AmazonEco:token', token);
+    
+    router.push('/dashboard');
+  } catch (err: any) {
+    console.error('Erro detalhado na autenticação:', err);
+    
+    setError(
+      err.response?.data?.message || 
+      'Erro ao conectar com o servidor. Verifique suas credenciais.'
+    );
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
@@ -55,7 +53,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+        <form className="mt-8 space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-900/50">
               {error}
@@ -95,6 +93,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
+            onClick={handleLogin}
             disabled={loading}
             className="group relative flex w-full justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:bg-green-800 disabled:cursor-not-allowed"
           >
