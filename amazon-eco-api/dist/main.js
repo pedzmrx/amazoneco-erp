@@ -10,6 +10,6 @@ async function bootstrap() {
         preflightContinue: false,
         optionsSuccessStatus: 204,
     });
-    await app.listen(3002, '0.0.0.0');
+    await app.listen(3333, '0.0.0.0');
 }
 bootstrap();

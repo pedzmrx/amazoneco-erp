@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://127.0.0.1:3002', 
+  baseURL: 'https://wet-wasp-18.loca.lt', 
   headers: {
     'Content-Type': 'application/json',
   },
