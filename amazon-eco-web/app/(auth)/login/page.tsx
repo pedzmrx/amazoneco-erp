@@ -19,16 +19,38 @@ async function handleLogin(e: React.FormEvent) {
   setError('');
 
   try {
-    const response = await api.post('/auth/login', { 
+    console.log('Enviando dados para o servidor...');
+    const response = await api.post('https://obscure-guide-7v567vjv5p462wqp4-3333.app.github.dev/auth/login', { 
       email, 
       password 
     });
 
-    const { token } = response.data;
+    console.log('Resposta bruta do servidor:', response.data);
+
+    const token = response.data.token || response.data.access_token;
     
+    if (!token) {
+      console.error('Atenção: O back-end não retornou nenhuma propriedade "token" ou "access_token".');
+      setError('Erro na estrutura de autenticação do servidor.');
+      setLoading(false);
+      return;
+    }
+
+    console.log('Token obtido com sucesso! Salvando no localStorage...');
     localStorage.setItem('@AmazonEco:token', token);
+    document.cookie = `@AmazonEco:token=${token}; path=/; max-age=86400; SameSite=Lax`;
+    
+    console.log('Redirecionando para /dashboard...');
     
     router.push('/dashboard');
+
+    setTimeout(() => {
+      if (window.location.pathname !== '/dashboard') {
+        console.log('Router falhou ou demorou. Forçando redirecionamento nativo...');
+        window.location.href = '/dashboard';
+      }
+    }, 1000);
+
   } catch (err: any) {
     console.error('Erro detalhado na autenticação:', err);
     
@@ -53,7 +75,7 @@ async function handleLogin(e: React.FormEvent) {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6">
+        <form onSubmit={handleLogin} className="mt-8 space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-900/50">
               {error}
@@ -92,12 +114,11 @@ async function handleLogin(e: React.FormEvent) {
           </div>
 
           <button
-            type="submit"
-            onClick={handleLogin}
-            disabled={loading}
-            className="group relative flex w-full justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:bg-green-800 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Autenticando...' : 'Entrar'}
+          type="submit"
+          disabled={loading}
+          className="group relative flex w-full justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:bg-green-800 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Autenticando...' : 'Entrar'}
           </button>
         </form>
       </div>

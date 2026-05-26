@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const token = request.cookies.get('@amazon-eco:token')?.value;
+  const token = request.cookies.get('@AmazonEco:token')?.value;
 
   const isPublicRoute = pathname === '/login' || pathname === '/register';
 
@@ -23,8 +23,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/login',
-    '/register',
+    '/((?!_next/static|_next/image|favicon.ico|api).*)',
   ],
 };

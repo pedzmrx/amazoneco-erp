@@ -1,18 +1,18 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://wet-wasp-18.loca.lt', 
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'https://obscure-guide-7v567vjv5p462wqp4-3333.app.github.dev',
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('@amazon-eco:token');
-  
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('@AmazonEco:token');
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
-  
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
