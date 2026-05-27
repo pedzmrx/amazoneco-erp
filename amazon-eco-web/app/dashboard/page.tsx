@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '@/app/services/api';
 
 interface Manifesto {
@@ -14,10 +15,19 @@ interface Manifesto {
   createdAt: string; 
 }
 
+interface Company {
+  id: string;
+  name: string;
+  cnpj: string;
+  type: string;
+  address: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<'ALL' | 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO'>('ALL');
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,14 +44,19 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('@AmazonEco:token');
-      const response = await api.get('/manifestos', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setManifestos(response.data);
+      
+      const [responseManifestos, responseCompanies] = await Promise.all([
+        api.get('/manifestos', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/companies')
+      ]);
+
+      setManifestos(responseManifestos.data);
+      
+      if (Array.isArray(responseCompanies.data)) {
+        setCompanies(responseCompanies.data); 
+      }
     } catch (error) {
-      console.error('Erro ao buscar manifestos da API:', error);
+      console.error('Erro ao buscar dados da API:', error);
     } finally {
       setLoading(false);
     }
@@ -97,6 +112,8 @@ export default function DashboardPage() {
   const totalGerenciadoToneladas = totalGerenciadoKg / 1000; 
   const pendentesColeta = manifestos.filter((m) => m.status === 'EMITIDO' || m.status === 'EM_TRANSITO').length;
 
+  const empresasRecentes = companies.slice(0, 4);
+
   if (loading && manifestos.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
@@ -115,15 +132,15 @@ export default function DashboardPage() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Gestão Ambiental e Resíduos</p>
           </div>
           <nav className="space-y-1">
-            <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 font-medium text-sm">
+            <Link href="/dashboard" className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 font-medium text-sm">
               <span>Dashboard</span>
-            </a>
-            <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
+            </Link>
+            <Link href="/dashboard" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
               <span>Manifestos (MTR)</span>
-            </a>
-            <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
+            </Link>
+            <Link href="/dashboard/companies" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
               <span>Clientes / PIM</span>
-            </a>
+            </Link>
           </nav>
         </div>
 
@@ -155,7 +172,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Cards de Métricas Rápidas Dinâmicas */}
+        {/* Cards de Métricas */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total Gerenciado</p>
@@ -169,61 +186,110 @@ export default function DashboardPage() {
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Taxa de Reciclagem</p>
             <p className="text-2xl font-bold mt-2 text-blue-500">75.5%</p>
           </div>
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Empresas Atendidas</p>
-            <p className="text-2xl font-bold mt-2">{manifestos.length}</p>
-          </div>
-        </section>
-
-        {/* Filtros e Tabela */}
-        <section className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-            <h3 className="font-semibold text-lg">Manifestos Recentes</h3>
-            <div className="flex space-x-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg text-xs">
-              <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'ALL' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Todos</button>
-              <button onClick={() => setFilter('EMITIDO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'EMITIDO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Emitidos</button>
-              <button onClick={() => setFilter('EM_TRANSITO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'EM_TRANSITO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Em Trânsito</button>
-              <button onClick={() => setFilter('RECEBIDO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'RECEBIDO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Recebidos</button>
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Empresas no PIM</p>
+              <p className="text-2xl font-bold mt-2 text-zinc-900 dark:text-zinc-100">{companies.length}</p>
+            </div>
+            <div className="mt-4 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
+              <Link href="/dashboard/companies" className="text-xs font-medium text-green-600 dark:text-green-500 hover:underline inline-flex items-center">
+                Gerenciar clientes →
+              </Link>
             </div>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-zinc-50/70 dark:bg-zinc-800/40 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium">
-                  <th className="p-4">Número MTR</th>
-                  <th className="p-4">Empresa (PIM)</th>
-                  <th className="p-4">Resíduo Destinado</th>
-                  <th className="p-4 text-right">Qtd. (Toneladas)</th>
-                  <th className="p-4">Data de Emissão</th>
-                  <th className="p-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {manifestosFiltrados.map((item) => (
-                  <tr key={item.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
-                    <td className="p-4 font-mono text-xs text-green-600 dark:text-green-400 font-semibold">{item.numeroMtr}</td>
-                    <td className="p-4 font-medium">{item.empresa}</td>
-                    <td className="p-4 text-zinc-600 dark:text-zinc-400">{item.tipoResiduo}</td>
-                    <td className="p-4 text-right font-mono font-medium">{(item.quantidade / 1000).toFixed(2)} t</td>
-                    <td className="p-4 text-zinc-500 dark:text-zinc-400">{new Date(item.createdAt).toLocaleDateString('pt-BR')}</td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                        item.status === 'RECEBIDO' 
-                          ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/50 dark:text-green-400' 
-                          : item.status === 'EM_TRANSITO'
-                          ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400'
-                          : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400'
-                      }`}>
-                        {item.status === 'RECEBIDO' ? 'Recebido' : item.status === 'EM_TRANSITO' ? 'Em Trânsito' : 'Emitido'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Coluna da Esquerda */}
+          <section className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+                <h3 className="font-semibold text-lg">Manifestos Recentes</h3>
+                <div className="flex space-x-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg text-xs">
+                  <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'ALL' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Todos</button>
+                  <button onClick={() => setFilter('EMITIDO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'EMITIDO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Emitidos</button>
+                  <button onClick={() => setFilter('EM_TRANSITO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'EM_TRANSITO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Em Trânsito</button>
+                  <button onClick={() => setFilter('RECEBIDO')} className={`px-3 py-1.5 rounded-md font-medium transition-colors ${filter === 'RECEBIDO' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'}`}>Recebidos</button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-zinc-50/70 dark:bg-zinc-800/40 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium">
+                      <th className="p-4">Número MTR</th>
+                      <th className="p-4">Empresa (PIM)</th>
+                      <th className="p-4">Resíduo Destinado</th>
+                      <th className="p-4 text-right">Qtd. (t)</th>
+                      <th className="p-4 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {manifestosFiltrados.slice(0, 5).map((item) => (
+                      <tr key={item.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                        <td className="p-4 font-mono text-xs text-green-600 dark:text-green-400 font-semibold">{item.numeroMtr}</td>
+                        <td className="p-4 font-medium max-w-[140px] truncate">{item.empresa}</td>
+                        <td className="p-4 text-zinc-600 dark:text-zinc-400 max-w-[120px] truncate">{item.tipoResiduo}</td>
+                        <td className="p-4 text-right font-mono font-medium">{(item.quantidade / 1000).toFixed(2)} t</td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${
+                            item.status === 'RECEBIDO' 
+                              ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/50 dark:text-green-400' 
+                              : item.status === 'EM_TRANSITO'
+                              ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400'
+                              : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400'
+                          }`}>
+                            {item.status === 'RECEBIDO' ? 'Recebido' : item.status === 'EM_TRANSITO' ? 'Em Trânsito' : 'Emitido'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          {/* Coluna da Direita */}
+          <section className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                <h3 className="font-semibold text-lg">Clientes Recentes</h3>
+                <span className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-2 py-1 rounded-md font-medium">PIM</span>
+              </div>
+
+              {empresasRecentes.length === 0 ? (
+                <p className="text-sm text-zinc-500 text-center py-8">Nenhum cliente cadastrado.</p>
+              ) : (
+                <div className="space-y-3">
+                  {empresasRecentes.map((company) => (
+                    <div key={company.id} className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/30 dark:bg-zinc-800/10 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <p className="text-sm font-semibold truncate text-zinc-800 dark:text-zinc-200">{company.name}</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 truncate">{company.cnpj}</p>
+                      </div>
+                      <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${
+                        company.type === 'GENERATOR' ? 'bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-400' :
+                        company.type === 'TRANSPORTER' ? 'bg-purple-50 border-purple-100 text-purple-700 dark:bg-purple-950/30 dark:border-purple-900/50 dark:text-purple-400' :
+                        'bg-orange-50 border-orange-100 text-orange-700 dark:bg-orange-950/30 dark:border-orange-900/50 dark:text-orange-400'
+                      }`}>
+                        {company.type === 'GENERATOR' ? 'Geradora' : company.type === 'TRANSPORTER' ? 'Transp.' : 'Destin.'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <Link href="/dashboard/companies" className="text-xs font-semibold text-green-600 dark:text-green-500 hover:underline block text-center w-full">
+                Ver Todos os Clientes →
+              </Link>
+            </div>
+          </section>
+
+        </div>
       </main>
 
       {/* Modal para Emissão DE MTR */}
@@ -255,15 +321,22 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Empresa Geradora (PIM)</label>
-                <input 
-                  type="text" 
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                  Empresa Geradora (PIM)
+                </label>
+                <select 
                   required
-                  placeholder="Ex: Samsung Eletrônicos da Amazônia"
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-transparent focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-800 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none text-zinc-900 dark:text-zinc-100"
                   value={empresa}
                   onChange={(e) => setEmpresa(e.target.value)}
-                />
+                >
+                  <option value="" className="text-zinc-500">Selecione uma empresa cadastrada...</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.name} className="text-zinc-900 dark:text-zinc-100">
+                      {company.name} ({company.cnpj})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
