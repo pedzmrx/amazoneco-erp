@@ -20,30 +20,72 @@ export default function DashboardPage() {
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function carregarDados() {
-      try {
-        const token = localStorage.getItem('@amazon-eco:token');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  
+  const [numeroMtr, setNumeroMtr] = useState('');
+  const [empresa, setEmpresa] = useState('');
+  const [tipoResiduo, setTipoResiduo] = useState('');
+  const [quantidadeToneladas, setQuantidadeToneladas] = useState('');
+  const [statusForm, setStatusForm] = useState<'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO'>('EMITIDO');
 
-        const response = await api.get('/manifestos', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setManifestos(response.data);
-      } catch (error) {
-        console.error('Erro ao buscar manifestos da API:', error);
-      } finally {
-        setLoading(false);
-      }
+  async function carregarDados() {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('@AmazonEco:token');
+      const response = await api.get('/manifestos', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setManifestos(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar manifestos da API:', error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     carregarDados();
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('@amazon-eco:token');
+    localStorage.removeItem('@AmazonEco:token');
     router.push('/login');
+  };
+
+  const handleCreateManifesto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError('');
+
+    try {
+      const quantidadeKg = Number(quantidadeToneladas) * 1000;
+
+      await api.post('/manifestos', {
+        numeroMtr,
+        empresaPim: empresa,
+        residuoDestinado: tipoResiduo,
+        quantidadeToneladas: quantidadeKg, 
+        status: statusForm,
+      });
+
+      setNumeroMtr('');
+      setEmpresa('');
+      setTipoResiduo('');
+      setQuantidadeToneladas('');
+      setStatusForm('EMITIDO');
+      setIsModalOpen(false);
+
+      await carregarDados();
+    } catch (err: any) {
+      console.error('Erro ao emitir manifesto:', err);
+      setFormError(err.response?.data?.message || 'Erro ao salvar o manifesto. Verifique as informações.');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const manifestosFiltrados = manifestos.filter((m) => {
@@ -55,7 +97,7 @@ export default function DashboardPage() {
   const totalGerenciadoToneladas = totalGerenciadoKg / 1000; 
   const pendentesColeta = manifestos.filter((m) => m.status === 'EMITIDO' || m.status === 'EM_TRANSITO').length;
 
-  if (loading) {
+  if (loading && manifestos.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 animate-pulse">Carregando painel Amazon Eco...</p>
@@ -100,8 +142,16 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-bold tracking-tight">Visão Geral</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Acompanhe as coletas e destinações de resíduos na região de Manaus.</p>
           </div>
-          <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
-            ● Licença IPAAM Ativa
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors"
+            >
+              + Emitir Novo MTR
+            </button>
+            <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
+              ● Licença IPAAM Ativa
+            </div>
           </div>
         </header>
 
@@ -175,6 +225,106 @@ export default function DashboardPage() {
           </div>
         </section>
       </main>
+
+      {/* Modal para Emissão DE MTR */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-xl space-y-4">
+            <div>
+              <h3 className="text-lg font-bold tracking-tight">Emitir Novo Manifesto (MTR)</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Insira as informações ambientais regulamentadas pelo IPAAM.</p>
+            </div>
+
+            {formError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50">
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateManifesto} className="space-y-4 text-sm">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Número do MTR</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ex: MTR-2026-88419"
+                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-transparent focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                  value={numeroMtr}
+                  onChange={(e) => setNumeroMtr(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Empresa Geradora (PIM)</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ex: Samsung Eletrônicos da Amazônia"
+                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-transparent focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                  value={empresa}
+                  onChange={(e) => setEmpresa(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Resíduo Destinado</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ex: Baterias de Lítio e Circuitos"
+                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-transparent focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                  value={tipoResiduo}
+                  onChange={(e) => setTipoResiduo(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Qtd. (Toneladas)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    required
+                    placeholder="Ex: 1.25"
+                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-transparent focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                    value={quantidadeToneladas}
+                    onChange={(e) => setQuantidadeToneladas(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Status Inicial</label>
+                  <select 
+                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-800 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                    value={statusForm}
+                    onChange={(e) => setStatusForm(e.target.value as any)}
+                  >
+                    <option value="EMITIDO">Emitido</option>
+                    <option value="EM_TRANSITO">Em Trânsito</option>
+                    <option value="RECEBIDO">Recebido</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:bg-green-800 shadow-sm"
+                >
+                  {formLoading ? 'Salvando...' : 'Emitir MTR'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,40 +17,21 @@ let ManifestosService = class ManifestosService {
         this.prisma = prisma;
     }
     async create(createManifestoDto, userId) {
-        const numeroMtr = `MTR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
         return this.prisma.manifesto.create({
             data: {
-                numeroMtr,
-                empresa: createManifestoDto.empresa,
-                tipoResiduo: createManifestoDto.tipoResiduo,
-                quantidade: Number(createManifestoDto.quantidade),
+                numeroMtr: createManifestoDto.numeroMtr,
+                empresa: createManifestoDto.empresaPim,
+                tipoResiduo: createManifestoDto.residuoDestinado,
+                quantidade: createManifestoDto.quantidadeToneladas,
+                status: createManifestoDto.status,
                 criadoPorId: userId,
             },
         });
     }
     async findAll() {
         return this.prisma.manifesto.findMany({
-            orderBy: {
-                createdAt: 'desc',
-            },
-            include: {
-                criadoPor: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
+            orderBy: { createdAt: 'desc' },
         });
-    }
-    async findOne(id) {
-        const manifesto = await this.prisma.manifesto.findUnique({
-            where: { id },
-        });
-        if (!manifesto) {
-            throw new common_1.NotFoundException('Manifesto não encontrado');
-        }
-        return manifesto;
     }
 };
 exports.ManifestosService = ManifestosService;

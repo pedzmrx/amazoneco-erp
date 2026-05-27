@@ -1,19 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateManifestoDto } from './dto/create-manifesto.dto';
 
 @Injectable()
 export class ManifestosService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createManifestoDto: any, userId: string) {
-    const numeroMtr = `MTR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-
+  async create(createManifestoDto: CreateManifestoDto, userId: string) {
     return this.prisma.manifesto.create({
       data: {
-        numeroMtr,
-        empresa: createManifestoDto.empresa,
-        tipoResiduo: createManifestoDto.tipoResiduo,
-        quantidade: Number(createManifestoDto.quantidade),
+        numeroMtr: createManifestoDto.numeroMtr,
+        empresa: createManifestoDto.empresaPim,
+        tipoResiduo: createManifestoDto.residuoDestinado, 
+        quantidade: createManifestoDto.quantidadeToneladas, 
+        status: createManifestoDto.status,
         criadoPorId: userId,
       },
     });
@@ -21,29 +21,7 @@ export class ManifestosService {
 
   async findAll() {
     return this.prisma.manifesto.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        criadoPor: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
+      orderBy: { createdAt: 'desc' },
     });
-  }
-
-  async findOne(id: string) {
-    const manifesto = await this.prisma.manifesto.findUnique({
-      where: { id },
-    });
-
-    if (!manifesto) {
-      throw new NotFoundException('Manifesto não encontrado');
-    }
-
-    return manifesto;
   }
 }
