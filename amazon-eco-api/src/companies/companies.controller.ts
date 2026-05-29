@@ -7,12 +7,12 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Post()
-  create(@Body() createCompanyDto: CreateCompanyDto) {
+  async create(@Body() createCompanyDto: any) {
     return this.companiesService.create(createCompanyDto);
   }
 
   @Get()
-  findAll() {
+  async findAll() {
     return this.companiesService.findAll();
   }
 }

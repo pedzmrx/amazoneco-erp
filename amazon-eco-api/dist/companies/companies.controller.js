@@ -15,15 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompaniesController = void 0;
 const common_1 = require("@nestjs/common");
 const companies_service_1 = require("./companies.service");
-const create_company_dto_1 = require("./dto/create-company.dto");
 let CompaniesController = class CompaniesController {
     constructor(companiesService) {
         this.companiesService = companiesService;
     }
-    create(createCompanyDto) {
+    async create(createCompanyDto) {
         return this.companiesService.create(createCompanyDto);
     }
-    findAll() {
+    async findAll() {
         return this.companiesService.findAll();
     }
 };
@@ -32,14 +31,14 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_company_dto_1.CreateCompanyDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "findAll", null);
 exports.CompaniesController = CompaniesController = __decorate([
     (0, common_1.Controller)('companies'),
