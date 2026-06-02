@@ -11,7 +11,7 @@ interface Manifesto {
   empresa: string;
   tipoResiduo: string; 
   quantidade: number;
-  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO'; 
+  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'; 
   createdAt: string; 
 }
 
@@ -25,7 +25,7 @@ interface Company {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [filter, setFilter] = useState<'ALL' | 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'>('ALL');
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const [empresa, setEmpresa] = useState('');
   const [tipoResiduo, setTipoResiduo] = useState('');
   const [quantidadeToneladas, setQuantidadeToneladas] = useState('');
-  const [statusForm, setStatusForm] = useState<'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO'>('EMITIDO');
+  const [statusForm, setStatusForm] = useState<'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'>('EMITIDO');
 
   async function carregarDados() {
     try {
@@ -77,13 +77,11 @@ export default function DashboardPage() {
     setFormError('');
 
     try {
-      const quantidadeKg = Number(quantidadeToneladas) * 1000;
-
       await api.post('/manifestos', {
         numeroMtr,
         empresaPim: empresa,
         residuoDestinado: tipoResiduo,
-        quantidadeToneladas: quantidadeKg, 
+        quantidadeToneladas: Number(quantidadeToneladas),
         status: statusForm,
       });
 
@@ -108,8 +106,7 @@ export default function DashboardPage() {
     return m.status === filter;
   });
 
-  const totalGerenciadoKg = manifestos.reduce((acc, m) => acc + m.quantidade, 0);
-  const totalGerenciadoToneladas = totalGerenciadoKg / 1000; 
+  const totalGerenciadoToneladas = manifestos.reduce((acc, m) => acc + m.quantidade, 0); 
   const pendentesColeta = manifestos.filter((m) => m.status === 'EMITIDO' || m.status === 'EM_TRANSITO').length;
 
   const empresasRecentes = companies.slice(0, 4);
@@ -201,7 +198,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Coluna da Esquerda */}
+          {/* Coluna da Esquerda - Listagem Real de Manifestos */}
           <section className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between">
             <div>
               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
@@ -231,16 +228,16 @@ export default function DashboardPage() {
                         <td className="p-4 font-mono text-xs text-green-600 dark:text-green-400 font-semibold">{item.numeroMtr}</td>
                         <td className="p-4 font-medium max-w-[140px] truncate">{item.empresa}</td>
                         <td className="p-4 text-zinc-600 dark:text-zinc-400 max-w-[120px] truncate">{item.tipoResiduo}</td>
-                        <td className="p-4 text-right font-mono font-medium">{(item.quantidade / 1000).toFixed(2)} t</td>
+                        <td className="p-4 text-right font-mono font-medium">{item.quantidade.toFixed(2)} t</td>
                         <td className="p-4 text-center">
                           <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                            item.status === 'RECEBIDO' 
+                            item.status === 'RECEBIDO' || item.status === 'DESTINADO'
                               ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/50 dark:text-green-400' 
                               : item.status === 'EM_TRANSITO'
                               ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400'
                               : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400'
                           }`}>
-                            {item.status === 'RECEBIDO' ? 'Recebido' : item.status === 'EM_TRANSITO' ? 'Em Trânsito' : 'Emitido'}
+                            {item.status === 'RECEBIDO' || item.status === 'DESTINADO' ? 'Recebido' : item.status === 'EM_TRANSITO' ? 'Em Trânsito' : 'Emitido'}
                           </span>
                         </td>
                       </tr>
@@ -251,7 +248,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Coluna da Direita */}
+          {/* Coluna da Direita - Clientes */}
           <section className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
@@ -374,6 +371,7 @@ export default function DashboardPage() {
                     <option value="EMITIDO">Emitido</option>
                     <option value="EM_TRANSITO">Em Trânsito</option>
                     <option value="RECEBIDO">Recebido</option>
+                    <option value="DESTINADO">Destinado</option>
                   </select>
                 </div>
               </div>
