@@ -24,7 +24,8 @@ exports.AppModule = AppModule = __decorate([
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
-            manifestos_module_1.ManifestosModule, companies_module_1.CompaniesModule
+            manifestos_module_1.ManifestosModule,
+            companies_module_1.CompaniesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

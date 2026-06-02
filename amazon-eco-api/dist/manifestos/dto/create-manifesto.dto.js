@@ -9,15 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateManifestoDto = exports.ManifestoStatus = void 0;
+exports.CreateManifestoDto = void 0;
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
-var ManifestoStatus;
-(function (ManifestoStatus) {
-    ManifestoStatus["EMITIDO"] = "Emitido";
-    ManifestoStatus["EM_TRANSITO"] = "Em Tr\u00E2nsito";
-    ManifestoStatus["RECEBIDO"] = "Recebido";
-})(ManifestoStatus || (exports.ManifestoStatus = ManifestoStatus = {}));
 class CreateManifestoDto {
 }
 exports.CreateManifestoDto = CreateManifestoDto;
@@ -42,7 +36,7 @@ __decorate([
     __metadata("design:type", Number)
 ], CreateManifestoDto.prototype, "quantidadeToneladas", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(ManifestoStatus, { message: 'Status inválido.' }),
+    (0, class_validator_1.IsEnum)(client_1.StatusManifesto, { message: 'Status inválido.' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'O status do manifesto é obrigatório.' }),
     __metadata("design:type", String)
 ], CreateManifestoDto.prototype, "status", void 0);
