@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <Link href="/dashboard" className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 font-medium text-sm">
               <span>Dashboard</span>
             </Link>
-            <Link href="/dashboard" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
+            <Link href="/dashboard/manifestos" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
               <span>Manifestos (MTR)</span>
             </Link>
             <Link href="/dashboard/companies" className="flex items-center space-x-3 px-3 py-2 rounded-lg text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 text-sm">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
                   Empresa Geradora (PIM)
                 </label>
-                <select 
+                <select
                   required
                   className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-800 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none text-zinc-900 dark:text-zinc-100"
                   value={empresa}
@@ -329,7 +329,7 @@ export default function DashboardPage() {
                 >
                   <option value="" className="text-zinc-500">Selecione uma empresa cadastrada...</option>
                   {companies.map((company) => (
-                    <option key={company.id} value={company.name} className="text-zinc-900 dark:text-zinc-100">
+                    <option key={company.id} value={company.id} className="text-zinc-900 dark:text-zinc-100">
                       {company.name} ({company.cnpj})
                     </option>
                   ))}
