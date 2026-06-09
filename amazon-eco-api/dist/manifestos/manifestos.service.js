@@ -39,6 +39,12 @@ let ManifestosService = class ManifestosService {
             orderBy: { createdAt: 'desc' },
         });
     }
+    async updateStatus(id, status) {
+        return this.prisma.manifesto.update({
+            where: { id },
+            data: { status },
+        });
+    }
 };
 exports.ManifestosService = ManifestosService;
 exports.ManifestosService = ManifestosService = __decorate([

@@ -32,4 +32,11 @@ export class ManifestosService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async updateStatus(id: string, status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO') {
+  return this.prisma.manifesto.update({
+    where: { id },
+    data: { status },
+  });
+}
 }

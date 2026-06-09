@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Patch, Param } from '@nestjs/common';
 import { ManifestosService } from './manifestos.service';
 import { CreateManifestoDto } from './dto/create-manifesto.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { IsEnum } from 'class-validator';
+
+class UpdateManifestoStatusDto {
+  @IsEnum(['EMITIDO', 'EM_TRANSITO', 'RECEBIDO', 'DESTINADO'], {
+    message: 'O status deve ser EMITIDO, EM_TRANSITO, RECEBIDO ou DESTINADO',
+  })
+  status!: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO';
+}
 
 @Controller('manifestos')
 @UseGuards(AuthGuard('jwt'))
@@ -23,5 +31,13 @@ export class ManifestosController {
   @Get()
   async findAll() {
     return this.manifestosService.findAll();
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateStatusDto: UpdateManifestoStatusDto,
+  ) {
+    return this.manifestosService.updateStatus(id, updateStatusDto.status);
   }
 }

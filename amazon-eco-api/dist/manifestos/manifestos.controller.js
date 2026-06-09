@@ -17,6 +17,15 @@ const common_1 = require("@nestjs/common");
 const manifestos_service_1 = require("./manifestos.service");
 const create_manifesto_dto_1 = require("./dto/create-manifesto.dto");
 const passport_1 = require("@nestjs/passport");
+const class_validator_1 = require("class-validator");
+class UpdateManifestoStatusDto {
+}
+__decorate([
+    (0, class_validator_1.IsEnum)(['EMITIDO', 'EM_TRANSITO', 'RECEBIDO', 'DESTINADO'], {
+        message: 'O status deve ser EMITIDO, EM_TRANSITO, RECEBIDO ou DESTINADO',
+    }),
+    __metadata("design:type", String)
+], UpdateManifestoStatusDto.prototype, "status", void 0);
 let ManifestosController = class ManifestosController {
     constructor(manifestosService) {
         this.manifestosService = manifestosService;
@@ -31,6 +40,9 @@ let ManifestosController = class ManifestosController {
     }
     async findAll() {
         return this.manifestosService.findAll();
+    }
+    async updateStatus(id, updateStatusDto) {
+        return this.manifestosService.updateStatus(id, updateStatusDto.status);
     }
 };
 exports.ManifestosController = ManifestosController;
@@ -48,6 +60,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ManifestosController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Patch)(':id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, UpdateManifestoStatusDto]),
+    __metadata("design:returntype", Promise)
+], ManifestosController.prototype, "updateStatus", null);
 exports.ManifestosController = ManifestosController = __decorate([
     (0, common_1.Controller)('manifestos'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

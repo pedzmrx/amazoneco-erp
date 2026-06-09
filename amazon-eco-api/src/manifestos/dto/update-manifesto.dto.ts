@@ -1,4 +1,8 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateManifestoDto } from './create-manifesto.dto';
+import { IsEnum } from 'class-validator';
 
-export class UpdateManifestoDto extends PartialType(CreateManifestoDto) {}
+export class UpdateManifestoStatusDto {
+  @IsEnum(['EMITIDO', 'EM_TRANSITO', 'RECEBIDO', 'DESTINADO'], {
+    message: 'O status deve ser EMITIDO, EM_TRANSITO, RECEBIDO ou DESTINADO',
+  })
+  status!: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO';
+}
