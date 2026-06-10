@@ -39,4 +39,40 @@ export class ManifestosService {
     data: { status },
   });
 }
+
+async getMetricas() {
+  const agrupado = await this.prisma.manifesto.groupBy({
+    by: ['status'],
+    _count: {
+      id: true,
+    },
+    _sum: {
+      quantidade: true,
+    },
+  });
+
+  const metricas = {
+    total: 0,
+    emitido: 0,
+    emTransito: 0,
+    recebido: 0,
+    destinado: 0,
+    pesoTotal: 0,
+  };
+
+  agrupado.forEach((item) => {
+    const qtd = item._count.id;
+    const peso = item._sum.quantidade || 0;
+
+    metricas.total += qtd;
+    metricas.pesoTotal += peso;
+
+    if (item.status === 'EMITIDO') metricas.emitido = qtd;
+    if (item.status === 'EM_TRANSITO') metricas.emTransito = qtd;
+    if (item.status === 'RECEBIDO') metricas.recebido = qtd;
+    if (item.status === 'DESTINADO') metricas.destinado = qtd;
+  });
+
+  return metricas;
+}
 }

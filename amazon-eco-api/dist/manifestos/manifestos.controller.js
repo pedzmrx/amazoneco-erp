@@ -44,6 +44,9 @@ let ManifestosController = class ManifestosController {
     async updateStatus(id, updateStatusDto) {
         return this.manifestosService.updateStatus(id, updateStatusDto.status);
     }
+    async getMetricas() {
+        return this.manifestosService.getMetricas();
+    }
 };
 exports.ManifestosController = ManifestosController;
 __decorate([
@@ -68,6 +71,12 @@ __decorate([
     __metadata("design:paramtypes", [String, UpdateManifestoStatusDto]),
     __metadata("design:returntype", Promise)
 ], ManifestosController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Get)('metricas'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ManifestosController.prototype, "getMetricas", null);
 exports.ManifestosController = ManifestosController = __decorate([
     (0, common_1.Controller)('manifestos'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

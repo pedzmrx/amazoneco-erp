@@ -40,4 +40,9 @@ export class ManifestosController {
   ) {
     return this.manifestosService.updateStatus(id, updateStatusDto.status);
   }
+
+  @Get('metricas')
+  async getMetricas() {
+    return this.manifestosService.getMetricas();
+}
 }
