@@ -20,7 +20,7 @@ async function handleLogin(e: React.FormEvent) {
 
   try {
     console.log('Enviando dados para o servidor...');
-    const response = await api.post('https://obscure-guide-7v567vjv5p462wqp4-3333.app.github.dev/auth/login', { 
+    const response = await api.post('https://cautious-carnival-975r67g755x62977v-3333.app.github.dev/auth/login', { 
       email, 
       password 
     });

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://obscure-guide-7v567vjv5p462wqp4-3333.app.github.dev',
+  baseURL: 'https://cautious-carnival-975r67g755x62977v-3333.app.github.dev',
 });
 
 api.interceptors.request.use((config) => {

@@ -4,7 +4,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const response = await fetch('http://127.0.0.1:3333/auth/login', {
+    const response = await fetch('https://cautious-carnival-975r67g755x62977v-3333.app.github.dev/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
