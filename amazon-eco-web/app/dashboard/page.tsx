@@ -92,14 +92,11 @@ export default function DashboardOverviewPage() {
   return (
     <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased relative selection:bg-emerald-500/30">
       
-      {/* Luzes de Fundo (Glow Estilo Linear/Supabase) */}
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* 1. SIDEBAR LATERAL FIXA - BLACK MATRIX */}
       <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-10">
         <div className="space-y-8">
-          {/* Brand Logo */}
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
               Æ
@@ -110,7 +107,6 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          {/* Menus Otimizados */}
           <div className="space-y-6">
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
@@ -148,10 +144,8 @@ export default function DashboardOverviewPage() {
         </button>
       </aside>
 
-      {/* 2. CANVAS CENTRAL DE CONTEÚDO */}
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto w-full max-w-7xl mx-auto relative z-10">
         
-        {/* Top Header Simplificado e Integrado */}
         <div className="flex justify-between items-center border-b border-zinc-900 pb-5">
           <div>
             <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
@@ -171,10 +165,8 @@ export default function DashboardOverviewPage() {
           </div>
         ) : (
           <>
-            {/* COMPOSIÇÃO BENTO GRID HIGH-TECH (Inspirado em image_fed7be.png) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Card Principal: Volume Acumulado */}
               <div className="lg:col-span-2 bg-gradient-to-br from-[#12141c] to-[#0e1017] rounded-2xl p-6 border border-zinc-800/80 shadow-2xl flex flex-col justify-between relative group overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/[0.02] rounded-full blur-2xl" />
                 
@@ -208,10 +200,8 @@ export default function DashboardOverviewPage() {
                 </div>
               </div>
 
-              {/* Mini Cards Verticais de Alta Densidade */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                 
-                {/* Mini Card 1 */}
                 <div className="bg-[#12141c] p-5 rounded-2xl border border-zinc-800/80 shadow-md flex items-center justify-between hover:border-zinc-700 transition-all">
                   <div className="space-y-1">
                     <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Manifestos MTR</span>
@@ -222,7 +212,6 @@ export default function DashboardOverviewPage() {
                   </div>
                 </div>
 
-                {/* Mini Card 2 */}
                 <div className="bg-[#12141c] p-5 rounded-2xl border border-zinc-800/80 shadow-md flex items-center justify-between border-l-2 border-l-blue-500 hover:border-zinc-700 transition-all">
                   <div className="space-y-1">
                     <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Cargas em Trânsito</span>
@@ -236,7 +225,6 @@ export default function DashboardOverviewPage() {
               </div>
             </div>
 
-            {/* ESTEIRA LOGÍSTICA COMPACTA DE MTR (Inspirada em image_fed499.png) */}
             <div className="bg-[#12141c] p-6 rounded-2xl border border-zinc-800/80 shadow-2xl space-y-6">
               <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
                 <div className="flex items-center gap-2">
@@ -247,14 +235,12 @@ export default function DashboardOverviewPage() {
               </div>
 
               <div className="space-y-4">
-                {/* Linha de Distribuição Estilizada */}
                 <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden flex p-0.5 border border-zinc-800">
                   <div style={{ width: `${pctEmitido}%` }} className="bg-amber-500 h-full rounded-l transition-all shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
                   <div style={{ width: `${pctTransito}%` }} className="bg-blue-500 h-full transition-all shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                   <div style={{ width: `${pctConcluido}%` }} className="bg-emerald-500 h-full rounded-r transition-all shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
                 </div>
 
-                {/* Métricas Individuais com Estilo Flat Premium */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   
                   <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 flex items-center justify-between group">
@@ -285,7 +271,6 @@ export default function DashboardOverviewPage() {
               </div>
             </div>
 
-            {/* FEED DE LOGS CORPORATIVO (Inspirado nas linhas pretas limpas de image_fed81c.png) */}
             <div className="space-y-3">
               <div className="flex justify-between items-center px-1">
                 <div className="flex items-center gap-2">
