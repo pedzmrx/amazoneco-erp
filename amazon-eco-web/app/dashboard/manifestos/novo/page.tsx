@@ -194,7 +194,7 @@ export default function NovoManifestoPage() {
                     <>
                       <option value="">Selecione uma indústria cadastrada no PIM...</option>
                       {empresasCadastradas.map((emp) => (
-                        <option key={emp.id} value={emp.name}>
+                        <option key={emp.id} value={emp.id}>
                           {emp.name}
                         </option>
                       ))}
