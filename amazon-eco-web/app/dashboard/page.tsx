@@ -5,55 +5,41 @@ import Link from 'next/link';
 import { api } from '../services/api';
 import { toast } from 'sonner';
 import { 
-  BarChart3, 
-  Truck, 
-  CheckCircle2, 
-  Scale, 
-  ArrowUpRight, 
-  LayoutDashboard,
-  FileText,
-  Building2,
-  Settings,
-  Bell,
-  LogOut,
-  TrendingUp,
+  LayoutDashboard, 
+  FileText, 
+  Building2, 
+  LogOut, 
+  RefreshCw,
+  Loader2,
+  ShieldAlert,
+  BarChart3,
+  Scale,
   Clock,
+  TrendingUp,
+  Truck,
+  Zap,
+  Globe,
+  CheckCircle2,
   Layers,
   ChevronRight,
-  ShieldCheck,
-  Zap,
-  Globe
+  Bell,
+  Settings
 } from 'lucide-react';
+
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface Manifesto {
   id: string;
   numeroMtr: string;
   empresa: string;
-  tipoResiduo: string; 
+  tipoResiduo: string;
   quantidade: number;
-  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'; 
-  createdAt: string; 
-}
-
-interface Metricas {
-  total: number;
-  emitido: number;
-  emTransito: number;
-  recebido: number;
-  destinado: number;
-  pesoTotal: number;
+  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO';
+  createdAt: string;
 }
 
 export default function DashboardOverviewPage() {
-  const [manifestosRecentes, setManifestosRecentes] = useState<Manifesto[]>([]);
-  const [metricas, setMetricas] = useState<Metricas>({
-    total: 0,
-    emitido: 0,
-    emTransito: 0,
-    recebido: 0,
-    destinado: 0,
-    pesoTotal: 0,
-  });
+  const [manifestos, setManifestos] = useState<Manifesto[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function carregarDadosDashboard() {
@@ -61,20 +47,16 @@ export default function DashboardOverviewPage() {
       setLoading(true);
       const token = localStorage.getItem('@AmazonEco:token');
       
-      const [responseManifestos, responseMetricas] = await Promise.all([
-        api.get('/manifestos', { headers: { Authorization: `Bearer ${token}` } }),
-        api.get('/manifestos/metricas', { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      
-      if (Array.isArray(responseManifestos.data)) {
-        setManifestosRecentes(responseManifestos.data.slice(0, 5));
-      }
-      if (responseMetricas.data) {
-        setMetricas(responseMetricas.data);
+      const response = await api.get('/manifestos', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (Array.isArray(response.data)) {
+        setManifestos(response.data);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
-      toast.error('Erro ao atualizar os indicadores do painel.');
+      toast.error('Não foi possível atualizar os indicadores analíticos.');
     } finally {
       setLoading(false);
     }
@@ -84,18 +66,42 @@ export default function DashboardOverviewPage() {
     carregarDadosDashboard();
   }, []);
 
-  const totalMtrs = metricas.total || 1;
-  const pctEmitido = ((metricas.emitido / totalMtrs) * 100).toFixed(0);
-  const pctTransito = ((metricas.emTransito / totalMtrs) * 100).toFixed(0);
-  const pctConcluido = (((metricas.recebido + metricas.destinado) / totalMtrs) * 100).toFixed(0);
+  const totalMtrs = manifestos.length;
+  const emitidosGrade = manifestos.filter(m => m.status === 'EMITIDO').length;
+  const emTransito = manifestos.filter(m => m.status === 'EM_TRANSITO').length;
+  const concluidos = manifestos.filter(m => m.status === 'RECEBIDO' || m.status === 'DESTINADO').length;
+  const tonelagemTotal = manifestos.reduce((acc, curr) => acc + curr.quantidade, 0);
+  
+  const taxaConformidade = totalMtrs > 0 ? ((concluidos / totalMtrs) * 100).toFixed(0) : '0';
+  const pctEmitido = totalMtrs > 0 ? ((emitidosGrade / totalMtrs) * 100).toFixed(0) : '0';
+  const pctTransito = totalMtrs > 0 ? ((emTransito / totalMtrs) * 100).toFixed(0) : '0';
+  const pctConcluido = totalMtrs > 0 ? ((concluidos / totalMtrs) * 100).toFixed(0) : '0';
+
+  const dadosRoscaStatus = [
+    { name: 'Coleta Pendente', value: emitidosGrade, color: '#f59e0b' },
+    { name: 'Em Transporte', value: emTransito, color: '#3b82f6' },
+    { name: 'Destinado', value: concluidos, color: '#10b981' }
+  ].filter(item => item.value > 0);
+
+  const agrupamentoResiduos = manifestos.reduce((acc: Record<string, number>, curr) => {
+    acc[curr.tipoResiduo] = (acc[curr.tipoResiduo] || 0) + curr.quantidade;
+    return acc;
+  }, {});
+
+  const dadosGraficoBarras = Object.entries(agrupamentoResiduos)
+    .map(([name, value]) => ({
+      name: name.length > 12 ? name.substring(0, 12) + '...' : name,
+      toneladas: Number(value.toFixed(2))
+    }))
+    .slice(0, 4);
 
   return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased relative selection:bg-emerald-500/30">
+    <div className="flex min-h-screen bg-[#07090e] text-zinc-100 font-sans antialiased relative selection:bg-emerald-500/20">
       
-      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-500/[0.02] rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-10 right-0 w-[500px] h-[500px] bg-blue-500/[0.02] rounded-full blur-[130px] pointer-events-none" />
 
-      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-10">
+      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
@@ -114,11 +120,11 @@ export default function DashboardOverviewPage() {
                 <LayoutDashboard className="w-4 h-4" />
                 Visão Geral
               </Link>
-              <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent hover:border-zinc-800/40">
+              <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <FileText className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Manifestos MTR
               </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent hover:border-zinc-800/40">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Empresas do PIM
               </Link>
@@ -126,11 +132,11 @@ export default function DashboardOverviewPage() {
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Notificações
               </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Configurações
               </Link>
@@ -144,166 +150,177 @@ export default function DashboardOverviewPage() {
         </button>
       </aside>
 
-      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto w-full max-w-7xl mx-auto relative z-10">
-        
-        <div className="flex justify-between items-center border-b border-zinc-900 pb-5">
+      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto relative z-10 w-full max-w-[1400px] mx-auto">
+        <div className="flex justify-between items-center border-b border-zinc-900/60 pb-5">
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-              <Zap className="w-4 h-4 text-emerald-400 fill-emerald-400/20" /> Console de Monitoramento
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Console &gt; Visão Geral</span>
+            <h1 className="text-xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-emerald-400 fill-emerald-400/10" /> Painel de Controle Analítico
             </h1>
-            <p className="text-xs text-zinc-500 mt-0.5">Métricas de conformidade ambiental integradas.</p>
           </div>
           <div className="flex items-center gap-2 bg-[#11131c] border border-zinc-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-zinc-400 shadow-inner">
-            <Globe className="w-3 h-3 text-emerald-400 animate-spin-[spin_3s_linear_infinite]" /> CLOUD_CONNECTED
+            <Globe className="w-3 h-3 text-emerald-400 animate-spin-[spin_3s_linear_infinite]" /> SYSTEM_INTEGRATED
           </div>
         </div>
 
         {loading ? (
-          <div className="space-y-6 animate-pulse">
-            <div className="h-44 bg-zinc-900 rounded-2xl" />
-            <div className="h-40 bg-zinc-900 rounded-2xl" />
+          <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <span className="text-xs font-mono font-bold tracking-widest uppercase">Consolidando Métricas do PIM...</span>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              <div className="lg:col-span-2 bg-gradient-to-br from-[#12141c] to-[#0e1017] rounded-2xl p-6 border border-zinc-800/80 shadow-2xl flex flex-col justify-between relative group overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/[0.02] rounded-full blur-2xl" />
-                
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest font-mono bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                      Massa Líquida
-                    </span>
-                    <h2 className="text-xs font-bold text-zinc-500 pt-3 uppercase tracking-wider">Volume Total Destinado no PIM</h2>
-                  </div>
-                  <Link 
-                    href="/dashboard/manifestos"
-                    className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition-all shadow-md"
-                  >
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-
-                <div className="my-5">
-                  <div className="text-5xl font-black tracking-tight text-white font-mono flex items-baseline gap-2">
-                    {metricas.pesoTotal.toFixed(2)}
-                    <span className="text-sm font-bold text-zinc-500 tracking-widest uppercase">Tons</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-zinc-900/60 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-zinc-600" /> Sincronismo ativo</span>
-                  <span className="text-emerald-400 font-bold flex items-center gap-0.5 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
-                    <TrendingUp className="w-3 h-3" /> +14.2%
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-xl flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Volume Total</span>
+                  <span className="text-2xl font-black text-white font-mono block tracking-tight">
+                    {tonelagemTotal.toFixed(1)} <span className="text-xs text-zinc-500 font-sans font-normal">t</span>
                   </span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <Scale className="w-4 h-4" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                
-                <div className="bg-[#12141c] p-5 rounded-2xl border border-zinc-800/80 shadow-md flex items-center justify-between hover:border-zinc-700 transition-all">
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Manifestos MTR</span>
-                    <span className="text-3xl font-black text-white font-mono">{metricas.total}</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-xl bg-zinc-900 text-zinc-500 flex items-center justify-center border border-zinc-800">
-                    <FileText className="w-4 h-4" />
-                  </div>
+              <div className="bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-xl flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Manifestos Emitidos</span>
+                  <span className="text-2xl font-black text-white font-mono block tracking-tight">{totalMtrs}</span>
                 </div>
-
-                <div className="bg-[#12141c] p-5 rounded-2xl border border-zinc-800/80 shadow-md flex items-center justify-between border-l-2 border-l-blue-500 hover:border-zinc-700 transition-all">
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block font-mono">Cargas em Trânsito</span>
-                    <span className="text-3xl font-black text-blue-400 font-mono">{metricas.emTransito}</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-xl bg-zinc-900 text-blue-500 flex items-center justify-center border border-zinc-800">
-                    <Truck className="w-4 h-4" />
-                  </div>
+                <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
                 </div>
+              </div>
 
+              <div className="bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-xl flex items-center justify-between border-l-2 border-l-blue-500">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Fluxo em Trânsito</span>
+                  <span className="text-2xl font-black text-blue-400 font-mono block tracking-tight">{emTransito}</span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-blue-500/5 border border-blue-500/10 text-blue-400 flex items-center justify-center">
+                  <Truck className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-xl flex items-center justify-between border-l-2 border-l-emerald-500">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Taxa de Conformidade</span>
+                  <span className="text-2xl font-black text-emerald-400 font-mono block tracking-tight">{taxaConformidade}%</span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
               </div>
             </div>
 
-            <div className="bg-[#12141c] p-6 rounded-2xl border border-zinc-800/80 shadow-2xl space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest font-mono">Status da Esteira Logística</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-5 bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-2xl flex flex-col justify-between h-64">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Logística de Carga</span>
+                  <span className="text-[8px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded text-zinc-600 font-bold">STATUS_RATIO</span>
                 </div>
-                <span className="text-[9px] font-mono bg-zinc-900 px-2.5 py-1 rounded-md text-zinc-500 border border-zinc-800 font-bold">ANALYTICS_VIEW</span>
+
+                <div className="flex items-center justify-between gap-4 h-full">
+                  <div className="w-28 h-28 relative flex items-center justify-center shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={dadosRoscaStatus}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={36}
+                          outerRadius={46}
+                          paddingAngle={3}
+                          dataKey="value"
+                        >
+                          {dadosRoscaStatus.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} className="outline-none" />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-lg font-black text-white font-mono">{totalMtrs}</span>
+                      <span className="text-[7px] font-bold text-zinc-500 uppercase font-mono">Guias</span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2 text-[11px] font-medium text-zinc-400">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" /> Emitidos</span>
+                      <span className="font-mono text-zinc-300 font-bold">{pctEmitido}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" /> Trânsito</span>
+                      <span className="font-mono text-zinc-300 font-bold">{pctTransito}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-zinc-500"><span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" /> Concluídos</span>
+                      <span className="font-mono text-zinc-300 font-bold">{pctConcluido}%</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden flex p-0.5 border border-zinc-800">
-                  <div style={{ width: `${pctEmitido}%` }} className="bg-amber-500 h-full rounded-l transition-all shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
-                  <div style={{ width: `${pctTransito}%` }} className="bg-blue-500 h-full transition-all shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
-                  <div style={{ width: `${pctConcluido}%` }} className="bg-emerald-500 h-full rounded-r transition-all shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+              <div className="lg:col-span-7 bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-2xl flex flex-col justify-between h-64">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Volumetria por Categoria</span>
+                  <span className="text-[8px] font-mono bg-zinc-900 px-1.5 py-0.5 rounded text-zinc-600 font-bold">TOP_MATERIALS</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  
-                  <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 flex items-center justify-between group">
-                    <div>
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">Aguardando Coleta</span>
-                      <span className="text-lg font-bold text-white font-mono">{metricas.emitido} <span className="text-xs font-normal text-zinc-600">({pctEmitido}%)</span></span>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]" />
-                  </div>
-
-                  <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 flex items-center justify-between border-t border-t-blue-500">
-                    <div>
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">Em Transporte</span>
-                      <span className="text-lg font-bold text-white font-mono">{metricas.emTransito} <span className="text-xs font-normal text-zinc-600">({pctTransito}%)</span></span>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_#3b82f6]" />
-                  </div>
-
-                  <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/60 flex items-center justify-between border-t border-t-emerald-500">
-                    <div>
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block font-mono">Destinação Final</span>
-                      <span className="text-lg font-bold text-white font-mono">{metricas.recebido + metricas.destinado} <span className="text-xs font-normal text-zinc-600">({pctConcluido}%)</span></span>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
-                  </div>
-
+                <div className="w-full h-44 pt-4">
+                  {dadosGraficoBarras.length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-600 font-mono">Aguardando dados industriais...</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dadosGraficoBarras} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                        <XAxis dataKey="name" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#07080d', borderColor: '#27272a', borderRadius: '10px' }}
+                          labelStyle={{ color: '#a1a1aa', fontSize: '10px' }}
+                          itemStyle={{ color: '#10b981', fontSize: '11px', fontFamily: 'monospace' }}
+                        />
+                        <Bar dataKey="toneladas" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={32}>
+                          {dadosGraficoBarras.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill="#10b981" fillOpacity={0.85} className="hover:fill-opacity-100 transition-all cursor-pointer" />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center px-1">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-zinc-600" />
-                  <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Registros de Auditoria Recente</h2>
-                </div>
-                <Link href="/dashboard/manifestos" className="text-xs text-emerald-400 font-bold hover:text-emerald-300 transition-colors flex items-center gap-0.5 group">
-                  Abrir Console Operacional
-                  <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
+              <div className="flex items-center gap-2 px-1">
+                <Layers className="w-4 h-4 text-zinc-600" />
+                <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Histórico de Auditoria Recente</h2>
               </div>
 
-              <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-xl overflow-hidden">
+              <div className="bg-[#111218] rounded-2xl border border-zinc-800/40 shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-zinc-900/50 border-b border-zinc-800 text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                        <th className="p-4">MTR_ID</th>
-                        <th className="p-4">Indústria Emissora</th>
-                        <th className="p-4">Material de Descarte</th>
+                      <tr className="bg-zinc-900/30 border-b border-zinc-800 text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                        <th className="p-4">Identificador MTR</th>
+                        <th className="p-4">Indústria Cadastrada</th>
+                        <th className="p-4">Material Transportado</th>
                         <th className="p-4 text-right">Volume</th>
-                        <th className="p-4 text-center">Status Interno</th>
+                        <th className="p-4 text-center">Status Global</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-900 text-xs text-zinc-400 font-medium">
-                      {manifestosRecentes.map((item) => (
-                        <tr key={item.id} className="hover:bg-zinc-900/40 transition-colors">
+                    <tbody className="divide-y divide-zinc-900/50 text-xs text-zinc-400 font-medium">
+                      {manifestos.slice(0, 5).map((item) => (
+                        <tr key={item.id} className="hover:bg-[#13141f]/30 transition-colors">
                           <td className="p-4 font-mono text-emerald-400 font-bold tracking-tight">{item.numeroMtr}</td>
                           <td className="p-4 font-semibold text-zinc-200">{item.empresa}</td>
-                          <td className="p-4 text-zinc-500">{item.tipoResiduo}</td>
+                          <td className="p-4 text-zinc-500 font-normal">{item.tipoResiduo}</td>
                           <td className="p-4 text-right font-mono font-bold text-zinc-100">{item.quantidade.toFixed(2)} t</td>
                           <td className="p-4 text-center">
-                            <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-bold rounded-md border ${
+                            <span className={`inline-flex items-center px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border ${
                               item.status === 'RECEBIDO' || item.status === 'DESTINADO'
                                 ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
                                 : item.status === 'EM_TRANSITO'
@@ -319,10 +336,16 @@ export default function DashboardOverviewPage() {
                   </table>
                 </div>
               </div>
+
+              <div className="flex justify-end pt-1">
+                <Link href="/dashboard/manifestos" className="text-xs text-emerald-400 font-bold hover:text-emerald-300 transition-colors flex items-center gap-0.5 group">
+                  Abrir Central de Operações Completa
+                  <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
             </div>
           </>
         )}
-
       </main>
     </div>
   );

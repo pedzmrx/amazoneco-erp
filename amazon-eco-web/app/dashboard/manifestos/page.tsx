@@ -1,84 +1,119 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../services/api';
+import { toast } from 'sonner';
 import { 
-  LayoutDashboard,
-  FileText,
-  Building2,
-  Settings,
-  Bell,
-  LogOut,
-  Search,
-  Plus,
-  ArrowLeft,
+  LayoutDashboard, 
+  FileText, 
+  Building2, 
+  LogOut, 
+  Plus, 
+  Search, 
   RefreshCw,
-  ChevronRight,
-  ShieldCheck,
-  Globe
+  Loader2,
+  ShieldAlert,
+  ArrowRightLeft,
+  Bell,
+  Settings
 } from 'lucide-react';
 
 interface Manifesto {
   id: string;
   numeroMtr: string;
   empresa: string;
-  tipoResiduo: string; 
+  tipoResiduo: string;
   quantidade: number;
-  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'; 
-  createdAt: string; 
+  status: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO';
+  createdAt: string;
 }
 
 export default function ManifestosPage() {
-  const router = useRouter();
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'ALL' | 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO'>('ALL');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusAtivo, setStatusAtivo] = useState('TODOS');
 
-  async function fetchManifestos() {
+  async function carregarManifestos() {
     try {
       setLoading(true);
       const token = localStorage.getItem('@AmazonEco:token');
-      const response = await api.get('/manifestos', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       
-      if (Array.isArray(response.data)) {
-        setManifestos(response.data);
-      } else {
-        setManifestos([]);
-      }
+      const response = await api.get('/manifestos', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          search: searchTerm.trim() || undefined,
+          status: statusAtivo
+        }
+      });
+
+      setManifestos(response.data);
     } catch (error) {
       console.error('Erro ao buscar manifestos:', error);
-      setManifestos([]);
+      toast.error('Não foi possível atualizar a grade de manifestos.');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    fetchManifestos();
-  }, []);
+  async function handleMudarStatus(id: string, novoStatus: 'EMITIDO' | 'EM_TRANSITO' | 'RECEBIDO' | 'DESTINADO') {
+    try {
+      setUpdatingId(id);
+      const token = localStorage.getItem('@AmazonEco:token');
 
-  const manifestosFiltrados = manifestos.filter((m) => {
-    const matchesSearch = m.numeroMtr.toLowerCase().includes(search.toLowerCase()) || 
-                          m.empresa.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'ALL' || m.status === filter;
-    return matchesSearch && matchesFilter;
-  });
+      await api.patch(`/manifestos/${id}/status`, 
+        { status: novoStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Status do Manifesto atualizado.');
+      await carregarManifestos();
+    } catch (error: any) {
+      console.error('Erro ao alterar status do MTR:', error);
+      const msg = error.response?.data?.message || 'Falha ao atualizar status.';
+      toast.error(msg);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      carregarManifestos();
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, statusAtivo]);
+
+  function renderBadgeStatus(status: string) {
+    const config: Record<string, { bg: string; text: string; label: string }> = {
+      EMITIDO: { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-400', label: 'Emitido' },
+      EM_TRANSITO: { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', label: 'Em Trânsito' },
+      RECEBIDO: { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', label: 'Recebido' },
+      DESTINADO: { bg: 'bg-zinc-500/10 border-zinc-800', text: 'text-zinc-400', label: 'Destinado' },
+    };
+
+    const atual = config[status] || config.EMITIDO;
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${atual.bg} ${atual.text}`}>
+        <span className="w-1 h-1 rounded-full bg-current" />
+        {atual.label}
+      </span>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased relative selection:bg-emerald-500/30">
+    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased">
       
-      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-emerald-500/[0.02] rounded-full blur-[130px] pointer-events-none" />
-
-      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-10">
+      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
-              AÆ
+              Æ
             </div>
             <div>
               <span className="text-white font-black tracking-tight text-sm block">AMAZON ECO</span>
@@ -89,7 +124,7 @@ export default function ManifestosPage() {
           <div className="space-y-6">
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
-              <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent hover:border-zinc-800/40">
+              <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Visão Geral
               </Link>
@@ -97,7 +132,7 @@ export default function ManifestosPage() {
                 <FileText className="w-4 h-4" />
                 Manifestos MTR
               </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent hover:border-zinc-800/40">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Empresas do PIM
               </Link>
@@ -105,11 +140,11 @@ export default function ManifestosPage() {
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Notificações
               </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group">
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Configurações
               </Link>
@@ -123,126 +158,132 @@ export default function ManifestosPage() {
         </button>
       </aside>
 
-      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto w-full max-w-7xl mx-auto relative z-10">
+      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-5">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider font-mono">
-              <Link href="/dashboard" className="hover:text-emerald-400 transition-colors flex items-center gap-1">
-                <ArrowLeft className="w-3 h-3" /> Console
-              </Link>
-              <ChevronRight className="w-3 h-3 text-zinc-800" />
-              <span className="text-zinc-400">Manifestos</span>
-            </div>
-            <h1 className="text-xl font-black text-white tracking-tight">Controle de Manifestos (MTR)</h1>
-            <p className="text-xs text-zinc-500">Listagem geral e acompanhamento de cargas regulamentadas pelo IPAAM.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
+          <div>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Console &gt; Manifestos</span>
+            <h1 className="text-xl font-black text-white tracking-tight mt-0.5">Controle de Manifestos (MTR)</h1>
+            <p className="text-xs text-zinc-500 mt-0.5">Listagem geral e acompanhamento de cargas regulamentadas pelo IPAAM.</p>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button 
-              onClick={fetchManifestos}
-              className="p-2.5 rounded-xl bg-[#12141c] hover:bg-zinc-900 text-zinc-500 hover:text-zinc-200 border border-zinc-800/80 transition-all"
-              title="Sincronizar base"
+              onClick={carregarManifestos}
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition-all active:scale-95"
+              title="Atualizar Tabela"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
             </button>
             
             <Link 
-              href="/dashboard/manifestos/novo" 
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/10 transition-all w-full sm:w-auto group"
+              href="/dashboard/manifestos/novo"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/10 transition-all w-full sm:w-auto"
             >
-              <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" />
+              <Plus className="w-4 h-4" />
               Emitir Novo MTR
             </Link>
           </div>
         </div>
 
-        <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/80 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-4">
-          
-          <div className="relative w-full lg:w-96 group">
-            <Search className="w-4 h-4 text-zinc-600 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
+        <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/60 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+          <div className="relative w-full md:max-w-md group">
+            <Search className="w-4 h-4 text-zinc-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
             <input 
               type="text"
               placeholder="Buscar por número MTR ou empresa..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#07080d] text-xs text-zinc-200 pl-10 pr-4 py-2.5 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/10 transition-all placeholder-zinc-600 font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#07080d] text-xs text-zinc-300 pl-11 pr-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/10 transition-all placeholder-zinc-700 font-medium"
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-[#07080d] p-1 rounded-xl border border-zinc-800/60 w-full lg:w-auto overflow-x-auto scrollbar-none">
-            {([
-              { id: 'ALL', label: 'Todos' },
+          <div className="flex items-center gap-1 bg-[#07080d] p-1 rounded-xl border border-zinc-900 w-full md:w-auto overflow-x-auto select-none no-scrollbar">
+            {[
+              { id: 'TODOS', label: 'Todos' },
               { id: 'EMITIDO', label: 'Emitidos' },
               { id: 'EM_TRANSITO', label: 'Em Trânsito' },
               { id: 'RECEBIDO', label: 'Recebidos' },
               { id: 'DESTINADO', label: 'Destinados' }
-            ] as const).map((statusType) => (
+            ].map((aba) => (
               <button
-                key={statusType.id}
-                onClick={() => setFilter(statusType.id)}
-                className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider font-mono transition-all whitespace-nowrap ${
-                  filter === statusType.id 
-                    ? 'bg-zinc-900 text-emerald-400 border border-zinc-800/80 shadow-inner' 
+                key={aba.id}
+                onClick={() => setStatusAtivo(aba.id)}
+                className={`px-3.5 py-2 rounded-lg text-[10px] uppercase tracking-wider font-bold transition-all whitespace-nowrap ${
+                  statusAtivo === aba.id 
+                    ? 'bg-zinc-800 text-emerald-400 shadow-sm border border-zinc-700/50' 
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {statusType.label}
+                {aba.label}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
-          {loading ? (
-            <div className="p-20 text-center text-zinc-500 text-xs font-mono flex flex-col items-center justify-center gap-3">
-              <RefreshCw className="w-5 h-5 animate-spin text-emerald-500" />
-              Carregando manifesto de dados ativos...
+        <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden relative">
+          {loading && manifestos.length === 0 ? (
+            <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+              <span className="text-xs font-mono font-bold tracking-widest uppercase animate-pulse">Sincronizando com o IPAAM...</span>
             </div>
-          ) : manifestosFiltrados.length === 0 ? (
-            <div className="p-20 text-center text-zinc-600 text-xs font-medium">
-              Nenhum registro de manifesto encontrado para os critérios informados.
+          ) : manifestos.length === 0 ? (
+            <div className="p-20 flex flex-col items-center justify-center gap-2 text-zinc-600 border border-dashed border-zinc-900 m-4 rounded-xl">
+              <ShieldAlert className="w-7 h-7 text-zinc-700" />
+              <span className="text-xs font-semibold text-zinc-400">Nenhum manifesto localizado</span>
+              <span className="text-[10px] font-medium max-w-xs text-center">Tente refinar sua busca ou mude a aba de status operacional selecionada.</span>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-zinc-900/40 border-b border-zinc-900 text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                    <th className="p-4">Identificador MTR</th>
-                    <th className="p-4">Empresa (PIM)</th>
-                    <th className="p-4">Resíduo Destinado</th>
-                    <th className="p-4 text-right">Massa Líquida</th>
-                    <th className="p-4 text-center">Status Operacional</th>
+                  <tr className="border-b border-zinc-900 bg-zinc-900/10 text-[10px] font-bold font-mono uppercase tracking-wider text-zinc-500">
+                    <th className="px-6 py-4.5">Identificador MTR</th>
+                    <th className="px-6 py-4.5">Empresa (PIM)</th>
+                    <th className="px-6 py-4.5">Resíduo Destinado</th>
+                    <th className="px-6 py-4.5 text-right">Massa Líquida</th>
+                    <th className="px-6 py-4.5 text-center">Status Operacional</th>
+                    <th className="px-6 py-4.5 text-center">Atualizar Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-900 text-xs text-zinc-400 font-medium">
-                  {manifestosFiltrados.map((item) => (
-                    <tr key={item.id} className="hover:bg-zinc-900/30 transition-colors group">
-                      <td className="p-4 font-mono text-emerald-400 font-bold tracking-tight group-hover:text-emerald-300">
+                <tbody className="divide-y divide-zinc-900/60 text-xs font-medium text-zinc-300">
+                  {manifestos.map((item) => (
+                    <tr key={item.id} className="hover:bg-zinc-900/20 transition-colors group">
+                      <td className="px-6 py-4 font-mono font-bold text-emerald-400 select-all">
                         {item.numeroMtr}
                       </td>
-                      <td className="p-4 font-semibold text-zinc-200">
+                      <td className="px-6 py-4 text-white font-semibold group-hover:text-emerald-300 transition-colors">
                         {item.empresa}
                       </td>
-                      <td className="p-4 text-zinc-500">
+                      <td className="px-6 py-4 text-zinc-400">
                         {item.tipoResiduo}
                       </td>
-                      <td className="p-4 text-right font-mono font-bold text-zinc-100">
-                        {item.quantidade.toFixed(2)} t
+                      <td className="px-6 py-4 text-right font-mono font-bold text-white tracking-tight">
+                        {item.quantidade.toFixed(2)} <span className="text-zinc-600 text-[10px] font-normal ml-0.5">t</span>
                       </td>
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold rounded-md border ${
-                          item.status === 'RECEBIDO' || item.status === 'DESTINADO'
-                            ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
-                            : item.status === 'EM_TRANSITO'
-                            ? 'bg-blue-500/5 text-blue-400 border-blue-500/10'
-                            : 'bg-amber-500/5 text-amber-400 border-amber-500/10'
-                        }`}>
-                          <span className={`w-1 h-1 rounded-full mr-1.5 ${
-                            item.status === 'RECEBIDO' || item.status === 'DESTINADO' ? 'bg-emerald-500' : item.status === 'EM_TRANSITO' ? 'bg-blue-500' : 'bg-amber-500'
-                          }`} />
-                          {item.status === 'RECEBIDO' || item.status === 'DESTINADO' ? 'Recebido' : item.status === 'EM_TRANSITO' ? 'Em Trânsito' : 'Emitido'}
-                        </span>
+                      <td className="px-6 py-4 text-center">
+                        {renderBadgeStatus(item.status)}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {updatingId === item.id ? (
+                          <div className="flex items-center justify-center">
+                            <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-1.5 bg-[#07080d] border border-zinc-800 rounded-xl px-2 py-1 max-w-[140px] mx-auto group-focus-within:border-emerald-500/30 transition-all">
+                            <ArrowRightLeft className="w-3 h-3 text-zinc-600 shrink-0" />
+                            <select
+                              value={item.status}
+                              onChange={(e) => handleMudarStatus(item.id, e.target.value as any)}
+                              className="bg-transparent text-[10px] font-bold text-zinc-400 focus:outline-none cursor-pointer uppercase font-mono w-full"
+                            >
+                              <option value="EMITIDO" className="bg-[#0b0c10] text-amber-400">Emitido</option>
+                              <option value="EM_TRANSITO" className="bg-[#0b0c10] text-blue-400">Trânsito</option>
+                              <option value="RECEBIDO" className="bg-[#0b0c10] text-emerald-400">Recebido</option>
+                              <option value="DESTINADO" className="bg-[#0b0c10] text-zinc-400">Destinado</option>
+                            </select>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -250,13 +291,12 @@ export default function ManifestosPage() {
               </table>
             </div>
           )}
-          
-          <div className="bg-[#0b0c10]/40 p-4 border-t border-zinc-900 flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-            <span>Resultados: {manifestosFiltrados.length} de {manifestos.length} indexados</span>
-            <span className="flex items-center gap-1 text-emerald-500/80"><ShieldCheck className="w-3.5 h-3.5" /> SECURE_LEDGER</span>
+
+          <div className="p-4 border-t border-zinc-900 bg-zinc-900/10 flex justify-between items-center text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-wider">
+            <span>Resultados: {manifestos.length} indexados</span>
+            <span className="text-emerald-500/40 flex items-center gap-1"> SECURE_LEDGER</span>
           </div>
         </div>
-
       </main>
     </div>
   );
