@@ -34,8 +34,20 @@ let ManifestosService = class ManifestosService {
             },
         });
     }
-    async findAll() {
+    async findAll(filters) {
+        const where = {};
+        if (filters?.status && filters.status !== 'TODOS') {
+            where.status = filters.status;
+        }
+        if (filters?.search) {
+            where.OR = [
+                { numeroMtr: { contains: filters.search, mode: 'insensitive' } },
+                { empresa: { contains: filters.search, mode: 'insensitive' } },
+                { tipoResiduo: { contains: filters.search, mode: 'insensitive' } },
+            ];
+        }
         return this.prisma.manifesto.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
         });
     }

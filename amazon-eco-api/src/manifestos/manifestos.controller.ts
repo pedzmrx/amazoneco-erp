@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Patch, Param, Query } from '@nestjs/common';
 import { ManifestosService } from './manifestos.service';
 import { CreateManifestoDto } from './dto/create-manifesto.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -29,8 +29,11 @@ export class ManifestosController {
   }
 
   @Get()
-  async findAll() {
-    return this.manifestosService.findAll();
+  async findAll(
+    @Query('search') search?: string, 
+    @Query('status') status?: string, 
+  ) {
+    return this.manifestosService.findAll({ search, status });
   }
 
   @Patch(':id/status')
@@ -44,5 +47,5 @@ export class ManifestosController {
   @Get('metricas')
   async getMetricas() {
     return this.manifestosService.getMetricas();
-}
+  }
 }

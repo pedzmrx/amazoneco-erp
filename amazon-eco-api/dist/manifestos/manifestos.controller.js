@@ -38,8 +38,8 @@ let ManifestosController = class ManifestosController {
         }
         return this.manifestosService.create(createManifestoDto, userId);
     }
-    async findAll() {
-        return this.manifestosService.findAll();
+    async findAll(search, status) {
+        return this.manifestosService.findAll({ search, status });
     }
     async updateStatus(id, updateStatusDto) {
         return this.manifestosService.updateStatus(id, updateStatusDto.status);
@@ -59,8 +59,10 @@ __decorate([
 ], ManifestosController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('search')),
+    __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ManifestosController.prototype, "findAll", null);
 __decorate([
