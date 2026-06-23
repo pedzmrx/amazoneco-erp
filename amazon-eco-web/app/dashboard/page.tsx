@@ -105,8 +105,7 @@ export default function DashboardOverviewPage() {
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
-              Æ
-            </div>
+              </div>
             <div>
               <span className="text-white font-black tracking-tight text-sm block">AMAZON ECO</span>
               <span className="text-[9px] font-bold text-emerald-400 tracking-widest block uppercase font-mono">PIM MONITOR</span>
@@ -124,7 +123,7 @@ export default function DashboardOverviewPage() {
                 <FileText className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Manifestos MTR
               </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
+              <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
                 <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
                 Empresas do PIM
               </Link>

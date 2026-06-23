@@ -1,8 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
+import { 
+  LayoutDashboard, 
+  FileText, 
+  Building2, 
+  LogOut, 
+  Plus, 
+  Search, 
+  RefreshCw,
+  Loader2,
+  ShieldAlert,
+  Bell,
+  Settings,
+  Globe,
+  Zap,
+  MapPin,
+  Briefcase,
+  Trash2,
+  Edit3,
+  X,
+  PlusCircle,
+  FileCheck
+} from 'lucide-react';
 
 interface Company {
   id: string;
@@ -52,7 +75,10 @@ export default function CompaniesPage() {
   async function fetchCompanies() {
     try {
       setLoading(true);
-      const response = await api.get('/companies');
+      const token = localStorage.getItem('@AmazonEco:token');
+      const response = await api.get('/companies', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (Array.isArray(response.data)) {
         setCompanies(response.data);
       } else {
@@ -72,6 +98,7 @@ export default function CompaniesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const token = localStorage.getItem('@AmazonEco:token');
     const toastId = toast.loading('Processando dados da empresa...');
     try {
       const cleanData = {
@@ -79,7 +106,9 @@ export default function CompaniesPage() {
         cnpj: formData.cnpj.replace(/\D/g, '')
       };
 
-      await api.post('/companies', cleanData);
+      await api.post('/companies', cleanData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setIsModalOpen(false);
       setFormData({ name: '', cnpj: '', type: 'GENERATOR', address: '', licenseNumber: '' });
       fetchCompanies(); 
@@ -108,6 +137,7 @@ export default function CompaniesPage() {
     e.preventDefault();
     if (!selectedCompanyId) return;
 
+    const token = localStorage.getItem('@AmazonEco:token');
     const toastId = toast.loading('Atualizando dados da empresa...');
     try {
       const cleanData = {
@@ -115,7 +145,9 @@ export default function CompaniesPage() {
         cnpj: editFormData.cnpj.replace(/\D/g, '')
       };
 
-      await api.patch(`/companies/${selectedCompanyId}`, cleanData);
+      await api.patch(`/companies/${selectedCompanyId}`, cleanData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setIsEditModalOpen(false);
       fetchCompanies();
       toast.success('Empresa atualizada com sucesso!', { id: toastId });
@@ -132,9 +164,12 @@ export default function CompaniesPage() {
       return;
     }
 
+    const token = localStorage.getItem('@AmazonEco:token');
     const toastId = toast.loading('Removendo empresa...');
     try {
-      await api.delete(`/companies/${id}`);
+      await api.delete(`/companies/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       fetchCompanies();
       toast.success('Empresa removida com sucesso!', { id: toastId });
     } catch (error: any) {
@@ -151,278 +186,284 @@ export default function CompaniesPage() {
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Cabeçalho */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-zinc-100">Clientes / PIM</h1>
-          <p className="text-sm text-gray-500">Gerenciamento de empresas geradoras, transportadoras e destinadoras.</p>
+    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased">
+      
+      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
+        <div className="space-y-8">
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
+              Æ
+            </div>
+            <div>
+              <span className="text-white font-black tracking-tight text-sm block">AMAZON ECO</span>
+              <span className="text-[9px] font-bold text-emerald-400 tracking-widest block uppercase font-mono">PIM MONITOR</span>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
+              <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
+                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                Visão Geral
+              </Link>
+              <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
+                <FileText className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                Manifestos MTR
+              </Link>
+              <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-bold text-xs border border-zinc-800 shadow-inner transition-all">
+                <Building2 className="w-4 h-4" />
+                Empresas do PIM
+              </Link>
+            </div>
+
+            <div className="space-y-1 pt-4 border-t border-zinc-900/50">
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
+                <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                Notificações
+              </Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
+                <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                Configurações
+              </Link>
+            </div>
+          </div>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          Novo Cliente
+
+        <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left">
+          <LogOut className="w-4 h-4" />
+          Sair do Painel
         </button>
-      </div>
+      </aside>
 
-      {/* Barra de Filtros e Busca */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-xl border shadow-sm">
-        <input 
-          type="text"
-          placeholder="Buscar por nome ou CNPJ..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:w-80 rounded-lg border border-gray-300 dark:border-zinc-700 px-3 py-2 bg-transparent text-sm focus:ring-2 focus:ring-green-500 outline-none"
-        />
+      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
+        
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
+          <div>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Console &gt; Cadastro</span>
+            <h1 className="text-xl font-black text-white tracking-tight mt-0.5">Credenciamento de Clientes / PIM</h1>
+            <p className="text-xs text-zinc-500 mt-0.5">Gerenciamento de empresas geradoras, transportadoras e destinadoras da Zona Franca.</p>
+          </div>
 
-        <div className="flex flex-wrap gap-2 text-xs">
-          {(['ALL', 'GENERATOR', 'TRANSPORTER', 'DESTINATOR'] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => setFilter(type)}
-              className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                filter === type 
-                  ? 'bg-green-600 text-white shadow-sm' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
-              }`}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button 
+              onClick={fetchCompanies}
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition-all active:scale-95"
+              title="Atualizar Tabela"
             >
-              {type === 'ALL' ? 'Todos' : type === 'GENERATOR' ? 'Geradora' : type === 'TRANSPORTER' ? 'Transportadora' : 'Destinadora'}
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
             </button>
-          ))}
+            
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/10 transition-all w-full sm:w-auto"
+            >
+              <Plus className="w-4 h-4" />
+              Credenciar Nova Empresa
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Tabela de Clientes */}
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Carregando empresas...</div>
-        ) : companiesFiltradas.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Nenhuma empresa encontrada com os filtros selecionados.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-zinc-800/50 border-b text-xs font-semibold text-gray-600 dark:text-zinc-400 uppercase tracking-wider">
-                  <th className="p-4">Razão / Nome Fantasia</th>
-                  <th className="p-4">CNPJ</th>
-                  <th className="p-4">Tipo</th>
-                  <th className="p-4">Endereço</th>
-                  <th className="p-4">Nº Licença</th>
-                  <th className="p-4 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-zinc-800 text-sm text-gray-700 dark:text-zinc-300">
-                {companiesFiltradas.map((company) => (
-                  <tr key={company.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition-colors">
-                    <td className="p-4 font-medium text-gray-900 dark:text-zinc-100">{company.name}</td>
-                    <td className="p-4 text-gray-500 dark:text-zinc-400">
-                      {company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
-                    </td>
-                    <td className="p-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        company.type === 'GENERATOR' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30' :
-                        company.type === 'TRANSPORTER' ? 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30' :
-                        'bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/30'
-                      }`}>
-                        {company.type === 'GENERATOR' ? 'Geradora' : 
-                         company.type === 'TRANSPORTER' ? 'Transportadora' : 'Destinadora'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-500 dark:text-zinc-400 max-w-xs truncate">{company.address}</td>
-                    <td className="p-4 text-gray-500 dark:text-zinc-400">{company.licenseNumber || '-'}</td>
-                    
-                    <td className="p-4 text-center space-x-2 whitespace-nowrap">
-                      <button
-                        onClick={() => handleOpenEditModal(company)}
-                        className="text-xs bg-zinc-100 hover:bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 px-2.5 py-1 rounded font-medium transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(company.id, company.name)}
-                        className="text-xs bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/30 dark:hover:bg-red-950/60 dark:text-red-400 px-2.5 py-1 rounded font-medium transition-colors"
-                      >
-                        Excluir
-                      </button>
-                    </td>
+        <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/60 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+          <div className="relative w-full md:max-w-md group">
+            <Search className="w-4 h-4 text-zinc-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
+            <input 
+              type="text"
+              placeholder="Buscar por nome ou CNPJ..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#07080d] text-xs text-zinc-300 pl-11 pr-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/10 transition-all placeholder-zinc-700 font-medium"
+            />
+          </div>
+
+          <div className="flex items-center gap-1 bg-[#07080d] p-1 rounded-xl border border-zinc-900 w-full md:w-auto overflow-x-auto select-none no-scrollbar">
+            {([
+              { id: 'ALL', label: 'Todos' },
+              { id: 'GENERATOR', label: 'Geradora' },
+              { id: 'TRANSPORTER', label: 'Transportadora' },
+              { id: 'DESTINATOR', label: 'Destinadora' }
+            ] as const).map((aba) => (
+              <button
+                key={aba.id}
+                onClick={() => setFilter(aba.id)}
+                className={`px-3.5 py-2 rounded-lg text-[10px] uppercase tracking-wider font-bold transition-all whitespace-nowrap ${
+                  filter === aba.id 
+                    ? 'bg-zinc-800 text-emerald-400 shadow-sm border border-zinc-700/50' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {aba.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden relative">
+          {loading ? (
+            <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+              <span className="text-xs font-mono font-bold tracking-widest uppercase animate-pulse">Buscando indústrias no ledger...</span>
+            </div>
+          ) : companiesFiltradas.length === 0 ? (
+            <div className="p-20 flex flex-col items-center justify-center gap-2 text-zinc-600 border border-dashed border-zinc-900 m-4 rounded-xl">
+              <ShieldAlert className="w-7 h-7 text-zinc-700" />
+              <span className="text-xs font-semibold text-zinc-400">Nenhuma organização localizada</span>
+              <span className="text-[10px] font-medium max-w-xs text-center">Modifique os filtros para atualizar a indexação.</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-900 bg-zinc-900/10 text-[10px] font-bold font-mono uppercase tracking-wider text-zinc-500">
+                    <th className="px-6 py-4.5">Razão / Nome Fantasia</th>
+                    <th className="px-6 py-4.5">CNPJ</th>
+                    <th className="px-6 py-4.5">Perfil Atuação</th>
+                    <th className="px-6 py-4.5">Endereço Operacional</th>
+                    <th className="px-6 py-4.5">Nº Licença IPAAM</th>
+                    <th className="px-6 py-4.5 text-center">Ações de Gestão</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-900/60 text-xs font-medium text-zinc-300">
+                  {companiesFiltradas.map((company) => (
+                    <tr key={company.id} className="hover:bg-zinc-900/20 transition-colors group">
+                      <td className="px-6 py-4 font-semibold text-white group-hover:text-emerald-300 transition-colors">{company.name}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-400">
+                        {company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[9px] font-bold uppercase border ${
+                          company.type === 'GENERATOR' ? 'bg-blue-500/5 text-blue-400 border-blue-500/10' :
+                          company.type === 'TRANSPORTER' ? 'bg-purple-500/5 text-purple-400 border-purple-500/10' :
+                          'bg-amber-500/5 text-amber-400 border-amber-500/10'
+                        }`}>
+                          {company.type === 'GENERATOR' ? 'Geradora' : 
+                           company.type === 'TRANSPORTER' ? 'Transportadora' : 'Destinadora'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-zinc-400 max-w-xs truncate">{company.address}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-500">{company.licenseNumber || '-'}</td>
+                      
+                      <td className="px-6 py-4 text-center space-x-2 whitespace-nowrap">
+                        <button
+                          onClick={() => handleOpenEditModal(company)}
+                          className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-amber-400 border border-zinc-800/80 transition-all inline-flex items-center shadow-md"
+                          title="Editar Cadastro"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(company.id, company.name)}
+                          className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-rose-400 border border-zinc-800/80 transition-all inline-flex items-center shadow-md"
+                          title="Remover Empresa"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      {/* Modal de Cadastro */}
+          <div className="p-4 border-t border-zinc-900 bg-zinc-900/10 flex justify-between items-center text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-wider">
+            <span>Organizações Indexadas: {companiesFiltradas.length}</span>
+            <span className="text-emerald-500/40 flex items-center gap-1">🛡️ SECURE_REGISTRY</span>
+          </div>
+        </div>
+      </main>
+
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border dark:border-zinc-800">
-            <div className="p-6 border-b dark:border-zinc-800">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Cadastrar Nova Empresa</h2>
-              <p className="text-sm text-gray-500">Preencha os dados da empresa do PIM.</p>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">
+            <div className="p-5 border-b border-zinc-900 bg-[#0b0c10] flex justify-between items-center">
+              <div>
+                <h2 className="text-sm font-black text-white font-mono flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4 text-emerald-400" /> CREDENCIAR NOVA EMPRESA
+                </h2>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60"><X className="w-4 h-4" /></button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Nome Fantasia / Razão Social</label>
-                <input 
-                  type="text" required
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                  placeholder="Ex: Samsung Manaus"
-                />
+            <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nome Fantasia / Razão Social</label>
+                <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" placeholder="Ex: Samsung Manaus" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">CNPJ</label>
-                <input 
-                  type="text" required
-                  value={formData.cnpj}
-                  onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                  placeholder="00.000.000/0000-00"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">CNPJ</label>
+                <input type="text" required value={formData.cnpj} onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" placeholder="00.000.000/0000-00" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Tipo de Empresa</label>
-                <select 
-                  value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-zinc-800"
-                >
-                  <option value="GENERATOR">Geradora (PIM)</option>
-                  <option value="TRANSPORTER">Transportadora</option>
-                  <option value="DESTINATOR">Destinadora / Tratamento</option>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Perfil de Atuação</label>
+                <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-300 focus:border-emerald-500/40 outline-none">
+                  <option value="GENERATOR">Geradora (Indústria PIM)</option>
+                  <option value="TRANSPORTER">Transportadora Logística</option>
+                  <option value="DESTINATOR">Destinadora / Tratamento Final</option>
                 </select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Endereço Completo</label>
-                <input 
-                  type="text" required
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                  placeholder="Av. Buriti, Distrito Industrial..."
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Endereço Operacional</label>
+                <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" placeholder="Av. Buriti, Distrito Industrial" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Nº da Licença Ambiental (Opcional)</label>
-                <input 
-                  type="text"
-                  value={formData.licenseNumber}
-                  onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                  placeholder="Ex: IPAAM 123/2024"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nº da Licença Ambiental IPAAM (Opcional)</label>
+                <input type="text" value={formData.licenseNumber} onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" placeholder="Ex: 123/2026" />
               </div>
-
-              <div className="flex gap-3 pt-4 border-t dark:border-zinc-800">
-                <button 
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border dark:border-zinc-800 rounded-lg text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
-                >
-                  Salvar Empresa
-                </button>
+              <div className="flex gap-3 pt-3 border-t border-zinc-900">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 rounded-xl bg-zinc-900/40 hover:bg-zinc-900 text-zinc-500 font-bold border border-zinc-800/40 transition-colors">Cancelar</button>
+                <button type="submit" className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-lg">Salvar Empresa</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal de Edição */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border dark:border-zinc-800">
-            <div className="p-6 border-b dark:border-zinc-800">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Editar Empresa</h2>
-              <p className="text-sm text-gray-500">Altere as informações necessárias do cliente.</p>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">
+            <div className="p-5 border-b border-zinc-900 bg-[#0b0c10] flex justify-between items-center">
+              <h2 className="text-sm font-black text-white font-mono flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-amber-400" /> ATUALIZAR CADASTRO
+              </h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60"><X className="w-4 h-4" /></button>
             </div>
             
-            <form onSubmit={handleUpdate} className="p-6 space-y-4 text-sm">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Nome Fantasia / Razão Social</label>
-                <input 
-                  type="text" required
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                />
+            <form onSubmit={handleUpdate} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nome Fantasia / Razão Social</label>
+                <input type="text" required value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">CNPJ</label>
-                <input 
-                  type="text" required
-                  value={editFormData.cnpj}
-                  onChange={(e) => setEditFormData({...editFormData, cnpj: formatCNPJ(e.target.value)})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">CNPJ</label>
+                <input type="text" required value={editFormData.cnpj} onChange={(e) => setEditFormData({...editFormData, cnpj: formatCNPJ(e.target.value)})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Tipo de Empresa</label>
-                <select 
-                  value={editFormData.type}
-                  onChange={(e) => setEditFormData({...editFormData, type: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-zinc-800"
-                >
-                  <option value="GENERATOR">Geradora (PIM)</option>
-                  <option value="TRANSPORTER">Transportadora</option>
-                  <option value="DESTINATOR">Destinadora / Tratamento</option>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Perfil de Atuação</label>
+                <select value={editFormData.type} onChange={(e) => setEditFormData({...editFormData, type: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-300 focus:border-emerald-500/40 outline-none">
+                  <option value="GENERATOR">Geradora (Indústria PIM)</option>
+                  <option value="TRANSPORTER">Transportadora Logística</option>
+                  <option value="DESTINATOR">Destinadora / Tratamento Final</option>
                 </select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Endereço Completo</label>
-                <input 
-                  type="text" required
-                  value={editFormData.address}
-                  onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Endereço Operacional</label>
+                <input type="text" required value={editFormData.address} onChange={(e) => setEditFormData({...editFormData, address: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-400 mb-1">Nº da Licença Ambiental</label>
-                <input 
-                  type="text"
-                  value={editFormData.licenseNumber}
-                  onChange={(e) => setEditFormData({...editFormData, licenseNumber: e.target.value})}
-                  className="w-full px-3 py-2 border dark:border-zinc-700 rounded-lg bg-transparent focus:ring-2 focus:ring-green-500 outline-none"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nº da Licença Ambiental IPAAM</label>
+                <input type="text" value={editFormData.licenseNumber} onChange={(e) => setEditFormData({...editFormData, licenseNumber: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" />
               </div>
-
-              <div className="flex gap-3 pt-4 border-t dark:border-zinc-800">
-                <button 
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 px-4 py-2 border dark:border-zinc-800 rounded-lg text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
-                >
-                  Salvar Alterações
-                </button>
+              <div className="flex gap-3 pt-3 border-t border-zinc-900">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2 rounded-xl bg-zinc-900/40 hover:bg-zinc-900 text-zinc-500 font-bold border border-zinc-800/40 transition-colors">Cancelar</button>
+                <button type="submit" className="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-colors shadow-lg">Salvar Alterações</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }
