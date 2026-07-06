@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
@@ -15,8 +16,6 @@ import {
   Loader2,
   ShieldAlert,
   ArrowRightLeft,
-  Bell,
-  Settings,
   Eye,
   X,
   Printer,
@@ -24,8 +23,10 @@ import {
   Layers,
   CheckCircle2,
   Clock,
-  Truck
-  ,Scale
+  Truck,
+  Scale,
+  Bell,
+  Settings
 } from 'lucide-react';
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -41,15 +42,27 @@ interface Manifesto {
 }
 
 export default function ManifestosPage() {
+  const router = useRouter();
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [estaAutenticado, setEstaAutenticado] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusAtivo, setStatusAtivo] = useState('TODOS');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMtr, setSelectedMtr] = useState<Manifesto | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('@AmazonEco:token');
+    if (!token) {
+      router.push('/');
+    } else {
+      setEstaAutenticado(true);
+      carregarManifestos();
+    }
+  }, [searchTerm, statusAtivo]);
 
   async function carregarManifestos() {
     try {
@@ -64,7 +77,9 @@ export default function ManifestosPage() {
         }
       });
 
-      setManifestos(response.data);
+      if (Array.isArray(response.data)) {
+        setManifestos(response.data);
+      }
     } catch (error) {
       console.error('Erro ao buscar manifestos:', error);
       toast.error('Não foi possível atualizar a grade de manifestos.');
@@ -91,7 +106,7 @@ export default function ManifestosPage() {
 
       await carregarManifestos();
     } catch (error: any) {
-      console.error('Erro ao alterar status do MTR:', error);
+      console.error('Erro ao atualizar status do MTR:', error);
       const msg = error.response?.data?.message || 'Falha ao atualizar status.';
       toast.error(msg);
     } finally {
@@ -111,13 +126,19 @@ export default function ManifestosPage() {
     }, 500);
   }
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      carregarManifestos();
-    }, 300);
+  function handleLogout() {
+    localStorage.removeItem('@AmazonEco:token');
+    router.push('/');
+  }
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, statusAtivo]);
+  if (!estaAutenticado) {
+    return (
+      <div className="min-h-screen bg-[#07080d] flex flex-col items-center justify-center gap-3 text-zinc-500">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <span className="text-xs font-mono font-bold tracking-widest uppercase animate-pulse">Verificando Credenciais...</span>
+      </div>
+    );
+  }
 
   const totalGrade = manifestos.length;
   const emitidosGrade = manifestos.filter(m => m.status === 'EMITIDO').length;
@@ -154,9 +175,8 @@ export default function ManifestosPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased">
+    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased w-full">
       
-      {/* SIDEBAR LATERAL UNIFICADA */}
       <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
@@ -173,40 +193,27 @@ export default function ManifestosPage() {
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
               <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Visão Geral
+                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Visão Geral
               </Link>
               <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-bold text-xs border border-zinc-800 shadow-inner transition-all">
-                <FileText className="w-4 h-4" />
-                Manifestos MTR
+                <FileText className="w-4 h-4" /> Manifestos MTR
               </Link>
               <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Empresas do PIM
+                <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Empresas do PIM
               </Link>
             </div>
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Notificações
-              </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Configurações
-              </Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</Link>
             </div>
           </div>
         </div>
 
-        <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left">
-          <LogOut className="w-4 h-4" />
-          Sair do Painel
-        </button>
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
       </aside>
 
-      {/* CONTEÚDO PRINCIPAL */}
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
           <div>
@@ -234,7 +241,6 @@ export default function ManifestosPage() {
           </div>
         </div>
 
-        {/* Painel Analítico Integrado */}
         {totalGrade > 0 && !loading && (
           <div className="bg-[#12141c] p-6 rounded-2xl border border-zinc-800/60 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative">
             <div className="flex flex-col sm:flex-row items-center gap-10 w-full md:w-auto">
@@ -297,7 +303,6 @@ export default function ManifestosPage() {
           </div>
         )}
 
-        {/* Filtros */}
         <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/60 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
           <div className="relative w-full md:max-w-md group">
             <Search className="w-4 h-4 text-zinc-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
@@ -333,7 +338,6 @@ export default function ManifestosPage() {
           </div>
         </div>
 
-        {/* Tabela */}
         <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden relative">
           {loading && manifestos.length === 0 ? (
             <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
@@ -422,7 +426,6 @@ export default function ManifestosPage() {
         </div>
       </main>
 
-      {/* MODAL: ESPELHO DO MTR COM TIMELINE */}
       {isModalOpen && selectedMtr && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
           <div className="bg-[#12141c] border border-zinc-800/80 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
