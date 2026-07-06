@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
@@ -9,17 +10,12 @@ import {
   FileText, 
   Building2, 
   LogOut, 
-  Plus, 
   Search, 
   RefreshCw,
   Loader2,
   ShieldAlert,
   Bell,
   Settings,
-  Globe,
-  Zap,
-  MapPin,
-  Briefcase,
   Trash2,
   Edit3,
   X,
@@ -37,8 +33,10 @@ interface Company {
 }
 
 export default function CompaniesPage() {
+  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [estaAutenticado, setEstaAutenticado] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
@@ -61,6 +59,17 @@ export default function CompaniesPage() {
     address: '',
     licenseNumber: ''
   });
+
+  // 🔒 Validação de Segurança Direto na Página
+  useEffect(() => {
+    const token = localStorage.getItem('@AmazonEco:token');
+    if (!token) {
+      router.push('/');
+    } else {
+      setEstaAutenticado(true);
+      fetchCompanies();
+    }
+  }, []);
 
   function formatCNPJ(value: string) {
     const digits = value.replace(/\D/g, '');
@@ -91,10 +100,6 @@ export default function CompaniesPage() {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,6 +183,20 @@ export default function CompaniesPage() {
     }
   };
 
+  function handleLogout() {
+    localStorage.removeItem('@AmazonEco:token');
+    router.push('/');
+  }
+
+  if (!estaAutenticado) {
+    return (
+      <div className="min-h-screen bg-[#07080d] flex flex-col items-center justify-center gap-3 text-zinc-500">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <span className="text-xs font-mono font-bold tracking-widest uppercase animate-pulse">Verificando Credenciais...</span>
+      </div>
+    );
+  }
+
   const companiesFiltradas = companies.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || 
                           c.cnpj.includes(search.replace(/\D/g, ''));
@@ -186,8 +205,9 @@ export default function CompaniesPage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased">
+    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased w-full">
       
+      {/* Sidebar Injetada Lateral */}
       <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
@@ -204,41 +224,29 @@ export default function CompaniesPage() {
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
               <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Visão Geral
+                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Visão Geral
               </Link>
               <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <FileText className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Manifestos MTR
+                <FileText className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Manifestos MTR
               </Link>
               <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-bold text-xs border border-zinc-800 shadow-inner transition-all">
-                <Building2 className="w-4 h-4" />
-                Empresas do PIM
+                <Building2 className="w-4 h-4" /> Empresas do PIM
               </Link>
             </div>
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Notificações
-              </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Configurações
-              </Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</Link>
             </div>
           </div>
         </div>
 
-        <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left">
-          <LogOut className="w-4 h-4" />
-          Sair do Painel
-        </button>
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
       </aside>
 
+      {/* Conteúdo Principal */}
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
-        
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
           <div>
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Console &gt; Cadastro</span>
@@ -259,21 +267,19 @@ export default function CompaniesPage() {
               onClick={() => setIsModalOpen(true)}
               className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/10 transition-all w-full sm:w-auto"
             >
-              <Plus className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4" />
               Credenciar Nova Empresa
             </button>
           </div>
         </div>
 
+        {/* Barra de Filtros e Busca */}
         <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/60 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
           <div className="relative w-full md:max-w-md group">
             <Search className="w-4 h-4 text-zinc-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
             <input 
-              type="text"
-              placeholder="Buscar por nome ou CNPJ..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#07080d] text-xs text-zinc-300 pl-11 pr-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/10 transition-all placeholder-zinc-700 font-medium"
+              type="text" placeholder="Buscar por nome ou CNPJ..." value={search} onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#07080d] text-xs text-zinc-300 pl-11 pr-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all placeholder-zinc-700 font-medium"
             />
           </div>
 
@@ -285,8 +291,7 @@ export default function CompaniesPage() {
               { id: 'DESTINATOR', label: 'Destinadora' }
             ] as const).map((aba) => (
               <button
-                key={aba.id}
-                onClick={() => setFilter(aba.id)}
+                key={aba.id} onClick={() => setFilter(aba.id)}
                 className={`px-3.5 py-2 rounded-lg text-[10px] uppercase tracking-wider font-bold transition-all whitespace-nowrap ${
                   filter === aba.id 
                     ? 'bg-zinc-800 text-emerald-400 shadow-sm border border-zinc-700/50' 
@@ -299,6 +304,7 @@ export default function CompaniesPage() {
           </div>
         </div>
 
+        {/* Tabela de Empresas */}
         <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden relative">
           {loading ? (
             <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
@@ -309,7 +315,6 @@ export default function CompaniesPage() {
             <div className="p-20 flex flex-col items-center justify-center gap-2 text-zinc-600 border border-dashed border-zinc-900 m-4 rounded-xl">
               <ShieldAlert className="w-7 h-7 text-zinc-700" />
               <span className="text-xs font-semibold text-zinc-400">Nenhuma organização localizada</span>
-              <span className="text-[10px] font-medium max-w-xs text-center">Modifique os filtros para atualizar a indexação.</span>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -348,14 +353,12 @@ export default function CompaniesPage() {
                         <button
                           onClick={() => handleOpenEditModal(company)}
                           className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-amber-400 border border-zinc-800/80 transition-all inline-flex items-center shadow-md"
-                          title="Editar Cadastro"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(company.id, company.name)}
                           className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-rose-400 border border-zinc-800/80 transition-all inline-flex items-center shadow-md"
-                          title="Remover Empresa"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -374,29 +377,28 @@ export default function CompaniesPage() {
         </div>
       </main>
 
+      {/* 🟢 MODAL DE CADASTRO */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">
             <div className="p-5 border-b border-zinc-900 bg-[#0b0c10] flex justify-between items-center">
-              <div>
-                <h2 className="text-sm font-black text-white font-mono flex items-center gap-2">
-                  <PlusCircle className="w-4 h-4 text-emerald-400" /> CREDENCIAR NOVA EMPRESA
-                </h2>
-              </div>
+              <h2 className="text-sm font-black text-white font-mono flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-emerald-400" /> CREDENCIAR NOVA EMPRESA
+              </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60"><X className="w-4 h-4" /></button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nome Fantasia / Razão Social</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Nome Fantasia / Razão Social</label>
                 <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" placeholder="Ex: Samsung Manaus" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">CNPJ</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">CNPJ</label>
                 <input type="text" required value={formData.cnpj} onChange={(e) => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" placeholder="00.000.000/0000-00" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Perfil de Atuação</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Perfil de Atuação</label>
                 <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-300 focus:border-emerald-500/40 outline-none">
                   <option value="GENERATOR">Geradora (Indústria PIM)</option>
                   <option value="TRANSPORTER">Transportadora Logística</option>
@@ -404,11 +406,11 @@ export default function CompaniesPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Endereço Operacional</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Endereço Operacional</label>
                 <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" placeholder="Av. Buriti, Distrito Industrial" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nº da Licença Ambiental IPAAM (Opcional)</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Nº da Licença Ambiental IPAAM (Opcional)</label>
                 <input type="text" value={formData.licenseNumber} onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" placeholder="Ex: 123/2026" />
               </div>
               <div className="flex gap-3 pt-3 border-t border-zinc-900">
@@ -420,8 +422,9 @@ export default function CompaniesPage() {
         </div>
       )}
 
+      {/* 🟡 MODAL DE EDIÇÃO */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">
             <div className="p-5 border-b border-zinc-900 bg-[#0b0c10] flex justify-between items-center">
               <h2 className="text-sm font-black text-white font-mono flex items-center gap-2">
@@ -432,15 +435,15 @@ export default function CompaniesPage() {
             
             <form onSubmit={handleUpdate} className="p-5 space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nome Fantasia / Razão Social</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Nome Fantasia / Razão Social</label>
                 <input type="text" required value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">CNPJ</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">CNPJ</label>
                 <input type="text" required value={editFormData.cnpj} onChange={(e) => setEditFormData({...editFormData, cnpj: formatCNPJ(e.target.value)})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Perfil de Atuação</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Perfil de Atuação</label>
                 <select value={editFormData.type} onChange={(e) => setEditFormData({...editFormData, type: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-300 focus:border-emerald-500/40 outline-none">
                   <option value="GENERATOR">Geradora (Indústria PIM)</option>
                   <option value="TRANSPORTER">Transportadora Logística</option>
@@ -448,11 +451,11 @@ export default function CompaniesPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Endereço Operacional</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Endereço Operacional</label>
                 <input type="text" required value={editFormData.address} onChange={(e) => setEditFormData({...editFormData, address: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Nº da Licença Ambiental IPAAM</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">Nº da Licença Ambiental IPAAM</label>
                 <input type="text" value={editFormData.licenseNumber} onChange={(e) => setEditFormData({...editFormData, licenseNumber: e.target.value})} className="w-full bg-[#07080d] border border-zinc-800 px-3 py-2 rounded-xl text-zinc-200 focus:border-emerald-500/40 outline-none font-mono" />
               </div>
               <div className="flex gap-3 pt-3 border-t border-zinc-900">
