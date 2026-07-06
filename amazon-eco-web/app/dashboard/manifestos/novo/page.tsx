@@ -16,7 +16,6 @@ import {
   Globe,
   Bell,
   Settings,
-  Scale,
   FilePlus2
 } from 'lucide-react';
 
@@ -30,6 +29,7 @@ export default function NovoManifestoPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [estaAutenticado, setEstaAutenticado] = useState(false);
 
   const [numeroMtr, setNumeroMtr] = useState('');
   const [empresaPim, setEmpresaPim] = useState('');
@@ -37,33 +37,39 @@ export default function NovoManifestoPage() {
   const [quantidadeToneladas, setQuantidadeToneladas] = useState('');
 
   useEffect(() => {
-    async function carregarEmpresas() {
-      try {
-        setLoadingCompanies(true);
-        const token = localStorage.getItem('@AmazonEco:token');
-        
-        const response = await api.get('/companies', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (Array.isArray(response.data)) {
-          setCompanies(response.data);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar empresas do PIM:', error);
-        toast.error('Falha ao conectar com o catálogo de indústrias.');
-        setCompanies([
-          { id: '1', name: 'Samsung Eletrônicos da Amazônia' },
-          { id: '2', name: 'Moto Honda da Amazônia' },
-          { id: '3', name: 'Panasonic do Brasil' }
-        ]);
-      } finally {
-        setLoadingCompanies(false);
-      }
+    const token = localStorage.getItem('@AmazonEco:token');
+    if (!token) {
+      router.push('/');
+    } else {
+      setEstaAutenticado(true);
+      carregarEmpresas();
     }
-
-    carregarEmpresas();
   }, []);
+
+  async function carregarEmpresas() {
+    try {
+      setLoadingCompanies(true);
+      const token = localStorage.getItem('@AmazonEco:token');
+      
+      const response = await api.get('/companies', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (Array.isArray(response.data)) {
+        setCompanies(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar empresas do PIM:', error);
+      toast.error('Falha ao conectar com o catálogo de indústrias.');
+      setCompanies([
+        { id: '1', name: 'Samsung Eletrônicos da Amazônia' },
+        { id: '2', name: 'Moto Honda da Amazônia' },
+        { id: '3', name: 'Panasonic do Brasil' }
+      ]);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,16 +101,28 @@ export default function NovoManifestoPage() {
       console.error('Erro ao emitir manifesto:', error);
       const msg = error.response?.data?.message || 'Falha ao registrar manifesto no servidor.';
       toast.error(msg);
-    } finally {
+    } finally { 
       setIsSubmitting(false);
     }
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased relative selection:bg-emerald-500/20">
-      
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-500/[0.02] rounded-full blur-[150px] pointer-events-none" />
+  function handleLogout() {
+    localStorage.removeItem('@AmazonEco:token');
+    router.push('/');
+  }
 
+  if (!estaAutenticado) {
+    return (
+      <div className="min-h-screen bg-[#07080d] flex flex-col items-center justify-center gap-3 text-zinc-500">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <span className="text-xs font-mono font-bold tracking-widest uppercase animate-pulse">Verificando Credenciais...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased w-full">
+      
       <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
@@ -121,41 +139,28 @@ export default function NovoManifestoPage() {
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
               <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Visão Geral
+                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Visão Geral
               </Link>
               <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-bold text-xs border border-zinc-800 shadow-inner transition-all">
-                <FileText className="w-4 h-4" />
-                Manifestos MTR
+                <FileText className="w-4 h-4" /> Manifestos MTR
               </Link>
               <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Empresas do PIM
+                <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Empresas do PIM
               </Link>
             </div>
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
               <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Bell className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Notificações
-              </Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Settings className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                Configurações
-              </Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</Link>
+              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</Link>
             </div>
           </div>
         </div>
 
-        <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left">
-          <LogOut className="w-4 h-4" />
-          Sair do Painel
-        </button>
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
       </aside>
 
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto relative z-10 w-full max-w-[900px] mx-auto">
-        
         <div className="flex justify-between items-center border-b border-zinc-900 pb-5">
           <div className="space-y-1">
             <Link 
@@ -174,17 +179,13 @@ export default function NovoManifestoPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-[#12141c] p-6 rounded-2xl border border-zinc-800/60 shadow-2xl space-y-5">
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">
                 Identificador MTR <span className="text-emerald-500">*</span>
               </label>
               <input 
-                type="text"
-                required
-                placeholder="Ex: MTR-2026-015"
-                value={numeroMtr}
+                type="text" required placeholder="Ex: MTR-2026-015" value={numeroMtr}
                 onChange={(e) => setNumeroMtr(e.target.value)}
                 className="w-full bg-[#07080d] text-xs text-zinc-200 px-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all placeholder-zinc-700 font-medium"
               />
@@ -196,9 +197,7 @@ export default function NovoManifestoPage() {
               </label>
               <div className="relative">
                 <select
-                  required
-                  value={empresaPim}
-                  onChange={(e) => setEmpresaPim(e.target.value)}
+                  required value={empresaPim} onChange={(e) => setEmpresaPim(e.target.value)}
                   className="w-full bg-[#07080d] text-xs text-zinc-300 px-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all cursor-pointer font-medium appearance-none"
                 >
                   <option value="" disabled className="text-zinc-700">Selecione a empresa geradora...</option>
@@ -221,10 +220,7 @@ export default function NovoManifestoPage() {
                 Material / Resíduo Destinado <span className="text-emerald-500">*</span>
               </label>
               <input 
-                type="text"
-                required
-                placeholder="Ex: Sucata de Placas/Circuitos Eletrônicos"
-                value={residuoDestinado}
+                type="text" required placeholder="Ex: Sucata de Placas/Circuitos Eletrônicos" value={residuoDestinado}
                 onChange={(e) => setResiduoDestinado(e.target.value)}
                 className="w-full bg-[#07080d] text-xs text-zinc-200 px-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all placeholder-zinc-700 font-medium"
               />
@@ -234,43 +230,26 @@ export default function NovoManifestoPage() {
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono block">
                 Massa Líquida Estimada (Tons) <span className="text-emerald-500">*</span>
               </label>
-              <div className="relative">
-                <input 
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ex: 12.50"
-                  value={quantidadeToneladas}
-                  onChange={(e) => setQuantidadeToneladas(e.target.value)}
-                  className="w-full bg-[#07080d] text-xs text-zinc-200 pl-4 pr-10 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all placeholder-zinc-700 font-mono font-bold"
-                />
-              </div>
+              <input 
+                type="number" step="0.01" required placeholder="Ex: 12.50" value={quantidadeToneladas}
+                onChange={(e) => setQuantidadeToneladas(e.target.value)}
+                className="w-full bg-[#07080d] text-xs text-zinc-200 px-4 py-3 rounded-xl border border-zinc-800/80 focus:border-emerald-500/50 focus:outline-none transition-all placeholder-zinc-700 font-mono font-bold"
+              />
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-900/60">
-            <Link 
-              href="/dashboard/manifestos"
-              className="px-4 py-2.5 rounded-xl bg-zinc-900/40 hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 text-xs font-bold border border-transparent hover:border-zinc-800/30 transition-all"
-            >
+            <Link href="/dashboard/manifestos" className="px-4 py-2.5 rounded-xl bg-zinc-900/40 hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 text-xs font-bold transition-all">
               Cancelar
             </Link>
-            
             <button
-              type="submit"
-              disabled={isSubmitting || loadingCompanies}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+              type="submit" disabled={isSubmitting || loadingCompanies}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Homologando no IPAAM...
-                </>
+                <><Loader2 className="w-4 h-4 animate-spin" /> Homologando no IPAAM...</>
               ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Emitir e Assinar Guia
-                </>
+                <><Save className="w-4 h-4" /> Emitir e Assinar Guia</>
               )}
             </button>
           </div>
