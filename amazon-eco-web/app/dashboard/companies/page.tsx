@@ -60,7 +60,6 @@ export default function CompaniesPage() {
     licenseNumber: ''
   });
 
-  // 🔒 Validação de Segurança Direto na Página
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
