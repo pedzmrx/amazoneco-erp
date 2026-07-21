@@ -206,7 +206,6 @@ export default function CompaniesPage() {
   return (
     <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased w-full">
       
-      {/* Sidebar Injetada Lateral */}
       <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
         <div className="space-y-8">
           <div className="flex items-center gap-3 px-1">
@@ -244,7 +243,6 @@ export default function CompaniesPage() {
         <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
       </aside>
 
-      {/* Conteúdo Principal */}
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
           <div>
@@ -272,7 +270,6 @@ export default function CompaniesPage() {
           </div>
         </div>
 
-        {/* Barra de Filtros e Busca */}
         <div className="bg-[#12141c] p-4 rounded-2xl border border-zinc-800/60 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
           <div className="relative w-full md:max-w-md group">
             <Search className="w-4 h-4 text-zinc-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-400 transition-colors" />
@@ -303,7 +300,6 @@ export default function CompaniesPage() {
           </div>
         </div>
 
-        {/* Tabela de Empresas */}
         <div className="bg-[#12141c] rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden relative">
           {loading ? (
             <div className="p-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
@@ -376,7 +372,6 @@ export default function CompaniesPage() {
         </div>
       </main>
 
-      {/* 🟢 MODAL DE CADASTRO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">
@@ -421,7 +416,6 @@ export default function CompaniesPage() {
         </div>
       )}
 
-      {/* 🟡 MODAL DE EDIÇÃO */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-[#12141c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-800/80">

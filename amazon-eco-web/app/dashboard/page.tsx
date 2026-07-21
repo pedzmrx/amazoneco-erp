@@ -20,10 +20,21 @@ import {
   Layers,
   ChevronRight,
   Bell,
-  Settings
+  Settings,
+  Download
 } from 'lucide-react';
 
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+
+interface StatsData {
+  totalMtrs: number;
+  tonelagemTotal: number;
+  emitidos: number;
+  emTransito: number;
+  concluidos: number;
+  taxaConformidade: number;
+  porResiduo: { tipoResiduo: string; quantidade: number }[];
+}
 
 interface Manifesto {
   id: string;
@@ -38,6 +49,7 @@ interface Manifesto {
 export default function DashboardOverviewPage() {
   const router = useRouter();
   const [manifestos, setManifestos] = useState<Manifesto[]>([]);
+  const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [estaAutenticado, setEstaAutenticado] = useState(false);
 
@@ -55,11 +67,19 @@ export default function DashboardOverviewPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('@AmazonEco:token');
-      const response = await api.get('/manifestos', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (Array.isArray(response.data)) {
-        setManifestos(response.data);
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [responseStats, responseRecent] = await Promise.all([
+        api.get('/manifestos/stats', { headers }).catch(() => null),
+        api.get('/manifestos', { headers })
+      ]);
+
+      if (responseStats?.data) {
+        setStats(responseStats.data);
+      }
+
+      if (Array.isArray(responseRecent?.data)) {
+        setManifestos(responseRecent.data);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
@@ -67,6 +87,38 @@ export default function DashboardOverviewPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function exportarParaCSV() {
+    if (manifestos.length === 0) {
+      toast.warning('Não há dados disponíveis para exportação.');
+      return;
+    }
+
+    const cabecalho = ['ID MTR', 'Empresa Geradora', 'Residuo Destinado', 'Massa (Tons)', 'Status', 'Data Emissao'];
+    
+    const linhas = manifestos.map(m => [
+      `"${m.numeroMtr}"`,
+      `"${m.empresa}"`,
+      `"${m.tipoResiduo}"`,
+      m.quantidade.toFixed(2),
+      m.status,
+      `"${new Date(m.createdAt).toLocaleDateString('pt-BR')}"`
+    ]);
+
+    const conteudoCsv = [cabecalho.join(','), ...linhas.map(row => row.join(','))].join('\n');
+    
+    const blob = new Blob(['\uFEFF' + conteudoCsv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.setAttribute('download', `relatorio_manifestos_pim_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success('Relatório CSV exportado com sucesso!');
   }
 
   function handleLogout() {
@@ -83,13 +135,13 @@ export default function DashboardOverviewPage() {
     );
   }
 
-  const totalMtrs = manifestos.length;
-  const emitidosGrade = manifestos.filter(m => m.status === 'EMITIDO').length;
-  const emTransito = manifestos.filter(m => m.status === 'EM_TRANSITO').length;
-  const concluidos = manifestos.filter(m => m.status === 'RECEBIDO' || m.status === 'DESTINADO').length;
-  const tonelagemTotal = manifestos.reduce((acc, curr) => acc + curr.quantidade, 0);
-  
-  const taxaConformidade = totalMtrs > 0 ? ((concluidos / totalMtrs) * 100).toFixed(0) : '0';
+  const totalMtrs = stats?.totalMtrs ?? manifestos.length;
+  const tonelagemTotal = stats?.tonelagemTotal ?? manifestos.reduce((acc, curr) => acc + curr.quantidade, 0);
+  const emitidosGrade = stats?.emitidos ?? manifestos.filter(m => m.status === 'EMITIDO').length;
+  const emTransito = stats?.emTransito ?? manifestos.filter(m => m.status === 'EM_TRANSITO').length;
+  const concluidos = stats?.concluidos ?? manifestos.filter(m => m.status === 'RECEBIDO' || m.status === 'DESTINADO').length;
+  const taxaConformidade = stats?.taxaConformidade ?? (totalMtrs > 0 ? ((concluidos / totalMtrs) * 100).toFixed(0) : '0');
+
   const pctEmitido = totalMtrs > 0 ? ((emitidosGrade / totalMtrs) * 100).toFixed(0) : '0';
   const pctTransito = totalMtrs > 0 ? ((emTransito / totalMtrs) * 100).toFixed(0) : '0';
   const pctConcluido = totalMtrs > 0 ? ((concluidos / totalMtrs) * 100).toFixed(0) : '0';
@@ -100,17 +152,20 @@ export default function DashboardOverviewPage() {
     { name: 'Destinado', value: concluidos, color: '#10b981' }
   ].filter(item => item.value > 0);
 
-  const agrupamentoResiduos = manifestos.reduce((acc: Record<string, number>, curr) => {
-    acc[curr.tipoResiduo] = (acc[curr.tipoResiduo] || 0) + curr.quantidade;
-    return acc;
-  }, {});
-
-  const dadosGraficoBarras = Object.entries(agrupamentoResiduos)
-    .map(([name, value]) => ({
-      name: name.length > 12 ? name.substring(0, 12) + '...' : name,
-      toneladas: Number(value.toFixed(2))
-    }))
-    .slice(0, 4);
+  const dadosGraficoBarras = stats?.porResiduo 
+    ? stats.porResiduo.map(item => ({
+        name: item.tipoResiduo.length > 12 ? item.tipoResiduo.substring(0, 12) + '...' : item.tipoResiduo,
+        toneladas: item.quantidade
+      }))
+    : Object.entries(manifestos.reduce((acc: Record<string, number>, curr) => {
+        acc[curr.tipoResiduo] = (acc[curr.tipoResiduo] || 0) + curr.quantidade;
+        return acc;
+      }, {}))
+      .map(([name, value]) => ({
+        name: name.length > 12 ? name.substring(0, 12) + '...' : name,
+        toneladas: Number(value.toFixed(2))
+      }))
+      .slice(0, 4);
 
   return (
     <div className="flex min-h-screen bg-[#07090e] text-zinc-100 font-sans antialiased w-full">
@@ -151,15 +206,24 @@ export default function DashboardOverviewPage() {
       </aside>
 
       <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto relative z-10">
-        <div className="flex justify-between items-center border-b border-zinc-900/60 pb-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900/60 pb-5">
           <div>
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Console &gt; Visão Geral</span>
             <h1 className="text-xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
               <Zap className="w-4 h-4 text-emerald-400 fill-emerald-400/10" /> Painel de Controle Analítico
             </h1>
           </div>
-          <div className="flex items-center gap-2 bg-[#11131c] border border-zinc-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-zinc-400 shadow-inner">
-            <Globe className="w-3 h-3 text-emerald-400" /> SYSTEM_INTEGRATED
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button 
+              onClick={exportarParaCSV}
+              className="flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 text-xs font-bold border border-zinc-800 shadow-md transition-all active:scale-95 w-full sm:w-auto"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Exportar CSV
+            </button>
+            <div className="hidden sm:flex items-center gap-2 bg-[#11131c] border border-zinc-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-zinc-400 shadow-inner">
+              <Globe className="w-3 h-3 text-emerald-400" /> SYSTEM_INTEGRATED
+            </div>
           </div>
         </div>
 
@@ -167,7 +231,7 @@ export default function DashboardOverviewPage() {
           <div className="bg-[#111218] p-5 rounded-2xl border border-zinc-800/40 shadow-xl flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Volume Total</span>
-              <span className="text-2xl font-black text-white font-mono block tracking-tight">{tonelagemTotal.toFixed(1)} <span className="text-xs text-zinc-500 font-sans font-normal">t</span></span>
+              <span className="text-2xl font-black text-white font-mono block tracking-tight">{Number(tonelagemTotal).toFixed(1)} <span className="text-xs text-zinc-500 font-sans font-normal">t</span></span>
             </div>
             <div className="w-9 h-9 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 flex items-center justify-center"><Scale className="w-4 h-4" /></div>
           </div>
@@ -266,7 +330,9 @@ export default function DashboardOverviewPage() {
                     <td className="p-4 text-zinc-500">{item.tipoResiduo}</td>
                     <td className="p-4 text-right font-mono font-bold text-zinc-100">{item.quantidade.toFixed(2)} t</td>
                     <td className="p-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-emerald-500/5 text-emerald-400 border-emerald-500/10">Concluído</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md border bg-emerald-500/5 text-emerald-400 border-emerald-500/10">
+                        {item.status}
+                      </span>
                     </td>
                   </tr>
                 ))}
