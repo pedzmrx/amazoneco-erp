@@ -90,4 +90,71 @@ export class ManifestosService {
 
     return metricas;
   }
+
+  async getStats() {
+    const agregados = await this.prisma.manifesto.aggregate({
+      _sum: {
+        quantidade: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const porStatus = await this.prisma.manifesto.groupBy({
+      by: ['status'],
+      _count: {
+        status: true,
+      },
+    });
+
+    const porResiduo = await this.prisma.manifesto.groupBy({
+      by: ['tipoResiduo'],
+      _sum: {
+        quantidade: true,
+      },
+      orderBy: {
+        _sum: {
+          quantidade: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    const totalMtrs = agregados._count?.id ?? 0;
+    const tonelagemTotal = agregados._sum?.quantidade ?? 0;
+
+    type StatusMap = Record<string, number>;
+    
+    const statusMap = porStatus.reduce<StatusMap>((acc, item) => {
+      if (item.status) {
+        acc[item.status] = item._count.status;
+      }
+      return acc;
+    }, {});
+
+    const emitidos = statusMap['EMITIDO'] ?? 0;
+    const emTransito = statusMap['EM_TRANSITO'] ?? 0;
+    const recebidos = statusMap['RECEBIDO'] ?? 0;
+    const destinados = statusMap['DESTINADO'] ?? 0;
+    const concluidos = recebidos + destinados;
+
+    const taxaConformidade = totalMtrs > 0 
+      ? Number(((concluidos / totalMtrs) * 100).toFixed(0)) 
+      : 0;
+
+    return {
+      totalMtrs,
+      tonelagemTotal: Number(tonelagemTotal.toFixed(2)),
+      emitidos,
+      emTransito,
+      concluidos,
+      taxaConformidade,
+      porResiduo: porResiduo.map((item) => ({
+        tipoResiduo: item.tipoResiduo,
+        quantidade: Number((item._sum?.quantidade ?? 0).toFixed(2)),
+      })),
+    };
+  }
 }
+

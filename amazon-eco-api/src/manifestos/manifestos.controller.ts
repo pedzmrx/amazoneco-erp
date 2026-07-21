@@ -36,16 +36,21 @@ export class ManifestosController {
     return this.manifestosService.findAll({ search, status });
   }
 
+  @Get('stats')
+  async getStats() {
+    return this.manifestosService.getStats();
+  }
+
+  @Get('metricas')
+  async getMetricas() {
+    return this.manifestosService.getMetricas();
+  }
+
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateManifestoStatusDto,
   ) {
     return this.manifestosService.updateStatus(id, updateStatusDto.status);
-  }
-
-  @Get('metricas')
-  async getMetricas() {
-    return this.manifestosService.getMetricas();
   }
 }
