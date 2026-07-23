@@ -118,19 +118,47 @@ class Class2Menu {
 
 // --- Helper utilities ---
 async function serviceParams(url = '/protocol/service/nextPageInfo') {
-  // wrapper for fetch so callers can stub or replace in tests
-  return fetch(url, { method: 'GET' });
+  const response = await fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+    headers: { Accept: 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to load service parameters (${response.status})`);
+  }
+
+  return response.json();
 }
 
 async function menuInfoRepair(url) {
-  const response = await serviceParams(url);
-  if (!response.ok) {
-    console.error('menuInfoRepair: failed to fetch params', response.status);
-    return { ok: false, items: [] };
+  try {
+    const data = await serviceParams(url);
+    const items = Array.isArray(data) ? data : data.items || [];
+    return { ok: true, items };
+  } catch (error) {
+    console.error('menuInfoRepair: failed to fetch params', error);
+    return { ok: false, items: [], error };
   }
-  const data = await response.json();
-  const items = data.items || [];
-  return { ok: true, items };
+}
+
+async function promptService(name, url = '/protocol/service/nextPageInfo') {
+  const result = await menuInfoRepair(url);
+  if (!result.ok) {
+    throw result.error;
+  }
+  return { name, items: result.items };
+}
+
+function configureAjax(client) {
+  if (!client || typeof client.ajaxPrefilter !== 'function') return false;
+
+  client.ajaxPrefilter('async', (options) => {
+    if (options.cache === undefined) options.cache = false;
+    if (options.crossDomain) options.type = 'GET';
+  });
+
+  return true;
 }
 
 function paddingOffside(enabled) {
@@ -165,4 +193,12 @@ function hideService(name, exe) {
 }
 
 export default Class2Menu;
-export { serviceParams, menuInfoRepair, paddingOffside, checkWholeIpv4, hideService };
+export {
+  serviceParams,
+  menuInfoRepair,
+  promptService,
+  configureAjax,
+  paddingOffside,
+  checkWholeIpv4,
+  hideService
+};

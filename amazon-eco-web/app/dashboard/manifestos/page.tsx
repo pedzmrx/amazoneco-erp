@@ -6,10 +6,7 @@ import Link from 'next/link';
 import { api } from '../../services/api';
 import { toast } from 'sonner';
 import { 
-  LayoutDashboard, 
   FileText, 
-  Building2, 
-  LogOut, 
   Plus, 
   Search, 
   RefreshCw,
@@ -24,9 +21,7 @@ import {
   CheckCircle2,
   Clock,
   Truck,
-  Scale,
-  Bell,
-  Settings
+  Scale
 } from 'lucide-react';
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -126,11 +121,6 @@ export default function ManifestosPage() {
     }, 500);
   }
 
-  function handleLogout() {
-    localStorage.removeItem('@AmazonEco:token');
-    router.push('/');
-  }
-
   if (!estaAutenticado) {
     return (
       <div className="min-h-screen bg-[#07080d] flex flex-col items-center justify-center gap-3 text-zinc-500">
@@ -153,7 +143,7 @@ export default function ManifestosPage() {
   const dadosGraficoMtr = [
     { name: 'Aguardando Coleta', value: emitidosGrade, color: '#f59e0b' },
     { name: 'Em Transporte', value: transitoGrade, color: '#3b82f6' },
-    { name: 'Destinação Final', value: concluidosGrade, color: '#10b981' }
+    { name: 'Destination Final', value: concluidosGrade, color: '#10b981' }
   ].filter(item => item.value > 0);
 
   function renderBadgeStatus(status: string) {
@@ -175,46 +165,8 @@ export default function ManifestosPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#07080d] text-zinc-100 font-sans antialiased w-full">
-      
-      <aside className="w-64 bg-[#0b0c10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-900/80 shrink-0 hidden lg:flex relative z-20">
-        <div className="space-y-8">
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black text-md shadow-lg shadow-emerald-500/20">
-              Æ
-            </div>
-            <div>
-              <span className="text-white font-black tracking-tight text-sm block">AMAZON ECO</span>
-              <span className="text-[9px] font-bold text-emerald-400 tracking-widest block uppercase font-mono">PIM MONITOR</span>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Navegação</span>
-              <Link href="/dashboard" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <LayoutDashboard className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Visão Geral
-              </Link>
-              <Link href="/dashboard/manifestos" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-bold text-xs border border-zinc-800 shadow-inner transition-all">
-                <FileText className="w-4 h-4" /> Manifestos MTR
-              </Link>
-              <Link href="/dashboard/companies" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent">
-                <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" /> Empresas do PIM
-              </Link>
-            </div>
-
-            <div className="space-y-1 pt-4 border-t border-zinc-900/50">
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</Link>
-              <Link href="#" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold transition-all group border border-transparent"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</Link>
-            </div>
-          </div>
-        </div>
-
-        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
-      </aside>
-
-      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto">
+    <>
+      <main className="flex-1 p-6 lg:p-8 space-y-6 overflow-y-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-6">
           <div>
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Console &gt; Manifestos</span>
@@ -421,7 +373,7 @@ export default function ManifestosPage() {
 
           <div className="p-4 border-t border-zinc-900 bg-zinc-900/10 flex justify-between items-center text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-wider">
             <span>Resultados: {manifestos.length} indexados</span>
-            <span className="text-emerald-500/40 flex items-center gap-1">🛡️ SECURE_LEDGER</span>
+            <span className="text-emerald-500/40 flex items-center gap-1"></span>
           </div>
         </div>
       </main>
@@ -497,6 +449,6 @@ export default function ManifestosPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
