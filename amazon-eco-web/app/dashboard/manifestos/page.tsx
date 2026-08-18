@@ -114,13 +114,6 @@ export default function ManifestosPage() {
     setIsModalOpen(true);
   }
 
-  function handleSimularImpressao() {
-    toast.info('Gerando espelho de impressão do MTR homologado pelo IPAAM...');
-    setTimeout(() => {
-      window.print();
-    }, 500);
-  }
-
   if (!estaAutenticado) {
     return (
       <div className="min-h-screen bg-[#07080d] flex flex-col items-center justify-center gap-3 text-zinc-500">
@@ -143,7 +136,7 @@ export default function ManifestosPage() {
   const dadosGraficoMtr = [
     { name: 'Aguardando Coleta', value: emitidosGrade, color: '#f59e0b' },
     { name: 'Em Transporte', value: transitoGrade, color: '#3b82f6' },
-    { name: 'Destination Final', value: concluidosGrade, color: '#10b981' }
+    { name: 'Destinação Final', value: concluidosGrade, color: '#10b981' }
   ].filter(item => item.value > 0);
 
   function renderBadgeStatus(status: string) {
@@ -373,7 +366,6 @@ export default function ManifestosPage() {
 
           <div className="p-4 border-t border-zinc-900 bg-zinc-900/10 flex justify-between items-center text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-wider">
             <span>Resultados: {manifestos.length} indexados</span>
-            <span className="text-emerald-500/40 flex items-center gap-1"></span>
           </div>
         </div>
       </main>
@@ -385,11 +377,13 @@ export default function ManifestosPage() {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-emerald-400" />
                 <div>
-                  <span className="text-[8px] font-black font-mono tracking-widest text-zinc-500 block uppercase">AUTENTICAÇÃO_SINAL_IPAAM</span>
+                  <span className="text-[8px] font-black font-mono tracking-widest text-zinc-500 block uppercase">Guia de Transporte</span>
                   <h3 className="text-sm font-black text-white font-mono tracking-tight">{selectedMtr.numeroMtr}</h3>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-500 border border-zinc-800/60"><X className="w-4 h-4" /></button>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="p-5 overflow-y-auto space-y-6">
@@ -442,9 +436,20 @@ export default function ManifestosPage() {
               </div>
             </div>
 
-            <div className="bg-[#0b0c10] p-3.5 border-t border-zinc-900 flex justify-between items-center">
-              <span className="text-[9px] font-mono text-emerald-500/50 uppercase tracking-widest">Digital_Signed_Ledger</span>
-              <button onClick={handleSimularImpressao} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-bold border border-zinc-800 shadow-inner"><Printer className="w-3.5 h-3.5" /> Imprimir Guia MTR</button>
+            <div className="bg-[#0b0c10] p-4 border-t border-zinc-900 flex justify-end items-center gap-3">
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="px-3 py-2 rounded-xl bg-zinc-900/60 hover:bg-zinc-900 text-zinc-400 text-xs font-bold transition-all"
+              >
+                Fechar
+              </button>
+              <Link
+                href={`/dashboard/manifestos/${selectedMtr.id}/imprimir`}
+                target="_blank"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md transition-all"
+              >
+                <Printer className="w-3.5 h-3.5" /> Abrir Espelho de Impressão (PDF)
+              </Link>
             </div>
           </div>
         </div>
