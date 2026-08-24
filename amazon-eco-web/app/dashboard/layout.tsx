@@ -53,6 +53,7 @@ export default function DashboardLayout({
   const isVisaoGeral = pathname === '/dashboard';
   const isManifestos = pathname === '/dashboard/manifestos';
   const isEmpresas = pathname === '/dashboard/companies';
+  const isNotificacoes = pathname === '/dashboard/notificacoes';
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#07090e] text-zinc-100 font-sans antialiased w-full">
@@ -135,9 +136,24 @@ export default function DashboardLayout({
               </nav>
 
               <div className="space-y-1 pt-4 border-t border-zinc-900">
-                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Sistema</span>
-                <button onClick={() => alert('Módulo em homologação.')} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 text-xs font-semibold text-left"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</button>
-                <button onClick={() => alert('Configurações gerenciadas pelo IPAAM.')} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 text-xs font-semibold text-left"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</button>
+                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Auditoria & Sistema</span>
+                <Link 
+                  href="/dashboard/notificacoes" 
+                  onClick={() => setMenuAberto(false)}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs border transition-all ${
+                    isNotificacoes 
+                      ? 'bg-zinc-900 text-emerald-400 font-bold border-zinc-800' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 border-transparent font-semibold'
+                  }`}
+                >
+                  <Bell className="w-4 h-4" /> Notificações
+                </Link>
+                <button 
+                  onClick={() => alert('Configurações gerenciadas pelo IPAAM.')} 
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 text-xs font-semibold text-left"
+                >
+                  <Settings className="w-4 h-4 text-zinc-600" /> Configurações
+                </button>
               </div>
             </div>
 
@@ -197,14 +213,30 @@ export default function DashboardLayout({
             </div>
 
             <div className="space-y-1 pt-4 border-t border-zinc-900/50">
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Segurança</span>
-              <button onClick={() => alert('Módulo em homologação.')} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold border border-transparent text-left"><Bell className="w-4 h-4 text-zinc-600" /> Notificações</button>
-              <button onClick={() => alert('Configurações gerenciadas pelo IPAAM.')} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold border border-transparent text-left"><Settings className="w-4 h-4 text-zinc-600" /> Configurações</button>
+              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-3 block mb-2 font-mono">Auditoria & Sistema</span>
+              <Link 
+                href="/dashboard/notificacoes" 
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs border transition-all ${
+                  isNotificacoes 
+                    ? 'bg-zinc-900 text-emerald-400 font-bold border-zinc-800 shadow-inner' 
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 border-transparent font-semibold'
+                }`}
+              >
+                <Bell className="w-4 h-4" /> Notificações
+              </Link>
+              <button 
+                onClick={() => alert('Configurações gerenciadas pelo IPAAM.')} 
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold border border-transparent text-left"
+              >
+                <Settings className="w-4 h-4 text-zinc-600" /> Configurações
+              </button>
             </div>
           </div>
         </div>
 
-        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left"><LogOut className="w-4 h-4" /> Sair do Painel</button>
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/30 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 text-xs font-bold border border-zinc-900 transition-all text-left">
+          <LogOut className="w-4 h-4" /> Sair do Painel
+        </button>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
