@@ -14,7 +14,7 @@ async function main() {
     data: {
       name: 'Erick Eco Admin',
       email: 'admin@amazoneco.com',
-      password: hashedPassword, 
+      password: hashedPassword,
       role: 'ADMIN',
     },
   });
@@ -46,14 +46,14 @@ async function main() {
       },
       {
         name: 'Logística Ambiental da Amazônia',
-        cnpj: '08123456000188',
+        cnpj: '08123456000150',
         type: 'TRANSPORTER',
         address: 'Rua Atid, 45 - Armando Mendes, Manaus - AM',
         licenseNumber: 'IPAAM-LT-2025/301',
       },
       {
         name: 'Amazon EcoTratamento Final',
-        cnpj: '10987654000199',
+        cnpj: '10987654000104',
         type: 'DESTINATOR',
         address: 'BR-174, Km 12 - Zona Rural, Manaus - AM',
         licenseNumber: 'IPAAM-LD-2024/050',
@@ -63,6 +63,11 @@ async function main() {
 
   console.log('Empresas do PIM cadastradas com sucesso!');
 
+  const agora = new Date();
+  const tresDiasAtras = new Date(agora.getTime() - 72 * 60 * 60 * 1000);
+  const seisDiasAtras = new Date(agora.getTime() - 144 * 60 * 60 * 1000);
+  const dezDiasAtras = new Date(agora.getTime() - 240 * 60 * 60 * 1000);
+
   await prisma.manifesto.createMany({
     data: [
       {
@@ -70,16 +75,9 @@ async function main() {
         empresa: 'Samsung Eletrônicos da Amazônia',
         tipoResiduo: 'Sucata Eletrônica (Placas/Circuitos)',
         quantidade: 1250.5,
-        status: 'EMITIDO',
+        status: 'DESTINADO',
         criadoPorId: admin.id,
-      },
-      {
-        numeroMtr: 'MTR-2026-443219',
-        empresa: 'Moto Honda da Amazônia',
-        tipoResiduo: 'Óleos Lubrificantes Usados',
-        quantidade: 850.0,
-        status: 'EM_TRANSITO',
-        criadoPorId: admin.id,
+        createdAt: dezDiasAtras,
       },
       {
         numeroMtr: 'MTR-2026-771102',
@@ -88,6 +86,7 @@ async function main() {
         quantidade: 2100.2,
         status: 'RECEBIDO',
         criadoPorId: admin.id,
+        createdAt: dezDiasAtras,
       },
       {
         numeroMtr: 'MTR-2026-104928',
@@ -96,6 +95,52 @@ async function main() {
         quantidade: 430.8,
         status: 'DESTINADO',
         criadoPorId: admin.id,
+        createdAt: dezDiasAtras,
+      },
+      {
+        numeroMtr: 'MTR-2026-619283',
+        empresa: 'Moto Honda da Amazônia',
+        tipoResiduo: 'Sucata Metálica Ferrosa',
+        quantidade: 1850.0,
+        status: 'DESTINADO',
+        criadoPorId: admin.id,
+        createdAt: dezDiasAtras,
+      },
+      {
+        numeroMtr: 'MTR-2026-443219',
+        empresa: 'Moto Honda da Amazônia',
+        tipoResiduo: 'Óleos Lubrificantes Usados',
+        quantidade: 850.0,
+        status: 'EM_TRANSITO',
+        criadoPorId: admin.id,
+        createdAt: agora,
+      },
+      {
+        numeroMtr: 'MTR-2026-318490',
+        empresa: 'Panasonic do Brasil',
+        tipoResiduo: 'Resíduos Químicos Classe I',
+        quantidade: 320.0,
+        status: 'EM_TRANSITO',
+        criadoPorId: admin.id,
+        createdAt: tresDiasAtras,
+      },
+      {
+        numeroMtr: 'MTR-2026-884120',
+        empresa: 'Samsung Eletrônicos da Amazônia',
+        tipoResiduo: 'Papelão e Embalagens Kraft',
+        quantidade: 620.0,
+        status: 'EMITIDO',
+        criadoPorId: admin.id,
+        createdAt: agora,
+      },
+      {
+        numeroMtr: 'MTR-2026-209481',
+        empresa: 'Moto Honda da Amazônia',
+        tipoResiduo: 'Lodos de ETE Industrial',
+        quantidade: 1100.0,
+        status: 'EMITIDO',
+        criadoPorId: admin.id,
+        createdAt: seisDiasAtras,
       },
     ],
   });
