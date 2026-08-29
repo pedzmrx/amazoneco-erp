@@ -32,7 +32,7 @@ export default function NovoManifestoPage() {
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
-      router.push('/');
+      router.push('/login');
     } else {
       setEstaAutenticado(true);
       carregarEmpresas();

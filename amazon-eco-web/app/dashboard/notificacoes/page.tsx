@@ -48,7 +48,7 @@ export default function NotificacoesPage() {
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
-      router.push('/');
+      router.push('/login');
     } else {
       setEstaAutenticado(true);
       gerarAuditoriaConformidade(token);

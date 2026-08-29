@@ -34,7 +34,7 @@ export default function ImprimirManifestoPage() {
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
-      router.push('/');
+      router.push('/login');
       return;
     }
 

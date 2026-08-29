@@ -56,7 +56,7 @@ export default function CompaniesPage() {
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
-      router.push('/');
+      router.push('/login');
     } else {
       setEstaAutenticado(true);
       fetchCompanies();

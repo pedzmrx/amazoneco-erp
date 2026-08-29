@@ -14,7 +14,9 @@ import {
   X, 
   Loader2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Search,
+  Plus
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -31,7 +33,7 @@ export default function DashboardLayout({
   useEffect(() => {
     const token = localStorage.getItem('@AmazonEco:token');
     if (!token) {
-      router.push('/');
+      router.push('/login');
     } else {
       setEstaAutenticado(true);
     }
@@ -39,7 +41,8 @@ export default function DashboardLayout({
 
   function handleLogout() {
     localStorage.removeItem('@AmazonEco:token');
-    router.push('/');
+    document.cookie = '@AmazonEco:token=; path=/; max-age=0; SameSite=Lax';
+    router.push('/login');
   }
 
   if (!estaAutenticado) {
@@ -58,29 +61,39 @@ export default function DashboardLayout({
   const isEmpresas = pathname.startsWith('/dashboard/companies');
   const isNotificacoes = pathname.startsWith('/dashboard/notificacoes');
 
+  let pageTitle = 'Visão Geral';
+  if (isManifestos) pageTitle = 'Manifestos MTR';
+  if (isEmpresas) pageTitle = 'Empresas do PIM';
+  if (isNotificacoes) pageTitle = 'Notificações';
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#07090e] text-zinc-100 font-sans antialiased w-full">
-      
-      <header className="lg:hidden bg-[#0a0c12] border-b border-zinc-900 px-4 py-3.5 flex items-center justify-between sticky top-0 z-40">
+      <header className="lg:hidden bg-[#090b10] border-b border-zinc-900 px-4 py-3.5 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
             <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
           </div>
-          <div>
-            <span className="text-white font-bold tracking-tight text-xs block leading-none">AMAZON ECO</span>
-            <span className="text-[8px] font-bold text-emerald-400 tracking-widest block uppercase font-mono mt-0.5">PIM MONITOR</span>
-          </div>
+          <span className="text-white font-bold tracking-tight text-sm">AMAZON ECO</span>
         </div>
 
-        <button 
-          onClick={() => setMenuAberto(!menuAberto)} 
-          className="p-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 transition-all active:scale-95"
-          aria-label="Alternar Menu"
-        >
-          {menuAberto ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/manifestos/novo"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold transition-all shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Novo MTR
+          </Link>
+          <button 
+            onClick={() => setMenuAberto(!menuAberto)} 
+            className="p-2 rounded-lg bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 transition-all active:scale-95"
+            aria-label="Alternar Menu"
+          >
+            {menuAberto ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </header>
 
       {menuAberto && (
@@ -93,16 +106,13 @@ export default function DashboardLayout({
           <aside className="relative w-72 bg-[#090b10] text-zinc-400 flex flex-col justify-between p-6 border-r border-zinc-800/80 z-10 shadow-2xl h-full overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                     <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                     </svg>
                   </div>
-                  <div>
-                    <span className="text-white font-bold text-xs block">AMAZON ECO</span>
-                    <span className="text-[8px] font-bold text-emerald-400 uppercase font-mono">Navegação</span>
-                  </div>
+                  <span className="text-white font-bold text-sm tracking-tight">AMAZON ECO</span>
                 </div>
                 <button onClick={() => setMenuAberto(false)} className="p-1.5 rounded-lg bg-zinc-900 text-zinc-400">
                   <X className="w-4 h-4" />
@@ -117,11 +127,11 @@ export default function DashboardLayout({
                   onClick={() => setMenuAberto(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all ${
                     isVisaoGeral 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-bold border-l-2 border-emerald-400' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-semibold'
+                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-medium'
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" /> Visão Geral
+                  <LayoutDashboard className={`w-4 h-4 ${isVisaoGeral ? 'text-zinc-950' : 'text-zinc-400'}`} /> Visão Geral
                 </Link>
 
                 <Link 
@@ -129,11 +139,11 @@ export default function DashboardLayout({
                   onClick={() => setMenuAberto(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all ${
                     isManifestos 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-bold border-l-2 border-emerald-400' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-semibold'
+                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-medium'
                   }`}
                 >
-                  <FileText className="w-4 h-4" /> Manifestos MTR
+                  <FileText className={`w-4 h-4 ${isManifestos ? 'text-zinc-950' : 'text-zinc-400'}`} /> Manifestos MTR
                 </Link>
 
                 <Link 
@@ -141,11 +151,11 @@ export default function DashboardLayout({
                   onClick={() => setMenuAberto(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all ${
                     isEmpresas 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-bold border-l-2 border-emerald-400' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-semibold'
+                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-medium'
                   }`}
                 >
-                  <Building2 className="w-4 h-4" /> Empresas do PIM
+                  <Building2 className={`w-4 h-4 ${isEmpresas ? 'text-zinc-950' : 'text-zinc-400'}`} /> Empresas do PIM
                 </Link>
               </nav>
 
@@ -157,39 +167,43 @@ export default function DashboardLayout({
                   onClick={() => setMenuAberto(false)}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all ${
                     isNotificacoes 
-                      ? 'bg-emerald-500/10 text-emerald-400 font-bold border-l-2 border-emerald-400' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-semibold'
+                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Bell className="w-4 h-4" /> Notificações
+                    <Bell className={`w-4 h-4 ${isNotificacoes ? 'text-zinc-950' : 'text-zinc-400'}`} /> Notificações
                   </div>
-                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 text-[10px] font-mono font-bold border border-amber-500/30">
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                    isNotificacoes 
+                      ? 'bg-zinc-950/20 text-zinc-950' 
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}>
                     3
                   </span>
                 </Link>
 
                 <button 
                   onClick={() => alert('Configurações gerenciadas pelo IPAAM.')} 
-                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-semibold text-left"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 text-xs font-medium text-left"
                 >
-                  <Settings className="w-4 h-4 text-zinc-600" /> Configurações
+                  <Settings className="w-4 h-4 text-zinc-500" /> Configurações
                 </button>
               </div>
             </div>
 
             <div className="pt-4 border-t border-zinc-900">
-              <div className="flex items-center justify-between bg-[#0e1017] p-2.5 rounded-xl border border-zinc-800/80 mb-3">
-                <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2.5">
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-xs font-bold text-zinc-200">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-400">
                       PL
                     </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0e1017]" />
+                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#090b10]" />
                   </div>
-                  <div className="overflow-hidden">
-                    <span className="text-xs font-bold text-zinc-200 block truncate">Pedro Lucas</span>
-                    <span className="text-[9px] text-zinc-500 block truncate font-mono uppercase">Auditor PIM</span>
+                  <div>
+                    <span className="text-xs font-bold text-zinc-200 block">Pedro Lucas</span>
+                    <span className="text-[9px] text-zinc-500 block font-mono">Auditor PIM</span>
                   </div>
                 </div>
 
@@ -207,14 +221,14 @@ export default function DashboardLayout({
       )}
 
       <aside className={`h-screen sticky top-0 bg-[#090b10] text-zinc-400 flex flex-col justify-between border-r border-zinc-900/90 shrink-0 hidden lg:flex z-20 transition-all duration-300 ease-in-out ${
-        recolhida ? 'w-20 p-3.5 items-center' : 'w-64 p-5'
+        recolhida ? 'w-20 p-3.5 items-center' : 'w-60 p-5'
       }`}>
         <div className="space-y-6 w-full">
           <div className={`flex items-center ${recolhida ? 'flex-col gap-3 justify-center' : 'justify-between'} px-1`}>
-            <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex items-center gap-2.5 overflow-hidden">
               <div 
                 onClick={() => setRecolhida(!recolhida)}
-                className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 shadow-sm cursor-pointer hover:border-emerald-500/40 transition-colors"
+                className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 shadow-sm cursor-pointer hover:border-emerald-500/50 transition-colors"
                 title={recolhida ? "Expandir menu lateral" : "Recolher menu lateral"}
               >
                 <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -223,10 +237,7 @@ export default function DashboardLayout({
               </div>
               
               {!recolhida && (
-                <div className="space-y-0.5 overflow-hidden">
-                  <span className="text-white font-bold tracking-tight text-xs block leading-none">AMAZON ECO</span>
-                  <span className="text-[9px] font-semibold text-zinc-500 tracking-wider block uppercase font-mono">PIM MONITOR</span>
-                </div>
+                <span className="text-white font-bold tracking-tight text-sm block leading-none">AMAZON ECO</span>
               )}
             </div>
 
@@ -266,13 +277,11 @@ export default function DashboardLayout({
                     : 'px-3.5 py-2.5'
                 } ${
                   isVisaoGeral 
-                    ? recolhida
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30'
-                      : 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent text-emerald-400 font-bold border-l-2 border-emerald-400 shadow-sm' 
+                    ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 font-medium'
                 }`}
               >
-                <LayoutDashboard className={`w-4 h-4 shrink-0 ${isVisaoGeral ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                <LayoutDashboard className={`w-4 h-4 shrink-0 ${isVisaoGeral ? 'text-zinc-950' : 'text-zinc-500'}`} />
                 {!recolhida && <span>Visão Geral</span>}
               </Link>
 
@@ -285,13 +294,11 @@ export default function DashboardLayout({
                     : 'px-3.5 py-2.5'
                 } ${
                   isManifestos 
-                    ? recolhida
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30'
-                      : 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent text-emerald-400 font-bold border-l-2 border-emerald-400 shadow-sm' 
+                    ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 font-medium'
                 }`}
               >
-                <FileText className={`w-4 h-4 shrink-0 ${isManifestos ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                <FileText className={`w-4 h-4 shrink-0 ${isManifestos ? 'text-zinc-950' : 'text-zinc-500'}`} />
                 {!recolhida && <span>Manifestos MTR</span>}
               </Link>
 
@@ -304,13 +311,11 @@ export default function DashboardLayout({
                     : 'px-3.5 py-2.5'
                 } ${
                   isEmpresas 
-                    ? recolhida
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30'
-                      : 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent text-emerald-400 font-bold border-l-2 border-emerald-400 shadow-sm' 
+                    ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 font-medium'
                 }`}
               >
-                <Building2 className={`w-4 h-4 shrink-0 ${isEmpresas ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                <Building2 className={`w-4 h-4 shrink-0 ${isEmpresas ? 'text-zinc-950' : 'text-zinc-500'}`} />
                 {!recolhida && <span>Empresas do PIM</span>}
               </Link>
             </div>
@@ -331,21 +336,23 @@ export default function DashboardLayout({
                     : 'justify-between px-3.5 py-2.5'
                 } ${
                   isNotificacoes 
-                    ? recolhida
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30'
-                      : 'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent text-emerald-400 font-bold border-l-2 border-emerald-400 shadow-sm' 
+                    ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20' 
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Bell className={`w-4 h-4 shrink-0 ${isNotificacoes ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                  <Bell className={`w-4 h-4 shrink-0 ${isNotificacoes ? 'text-zinc-950' : 'text-zinc-500'}`} />
                   {!recolhida && <span>Notificações</span>}
                 </div>
 
                 {recolhida ? (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#090b10]" />
                 ) : (
-                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold border border-amber-500/20">
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                    isNotificacoes 
+                      ? 'bg-zinc-950/20 text-zinc-950' 
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}>
                     3
                   </span>
                 )}
@@ -369,11 +376,11 @@ export default function DashboardLayout({
           {recolhida ? (
             <div className="flex flex-col items-center gap-2">
               <div 
-                className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-xs font-bold text-zinc-200 relative"
+                className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-400 relative"
                 title="Pedro Lucas - Auditor PIM"
               >
                 PL
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#090b10]" />
+                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#090b10]" />
               </div>
 
               <button 
@@ -385,17 +392,17 @@ export default function DashboardLayout({
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between bg-[#0e1017] p-2.5 rounded-xl border border-zinc-800/80">
+            <div className="flex items-center justify-between px-1 py-1">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <div className="relative shrink-0">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-xs font-bold text-zinc-200">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-400">
                     PL
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0e1017]" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#090b10]" />
                 </div>
                 <div className="overflow-hidden">
                   <span className="text-xs font-bold text-zinc-200 block truncate">Pedro Lucas</span>
-                  <span className="text-[9px] text-zinc-500 block truncate font-mono uppercase">Auditor PIM</span>
+                  <span className="text-[9px] text-zinc-500 block truncate font-mono">Auditor PIM</span>
                 </div>
               </div>
 
@@ -412,6 +419,43 @@ export default function DashboardLayout({
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        <header className="hidden lg:flex items-center justify-between h-16 px-8 border-b border-zinc-900 bg-[#07090e]/80 backdrop-blur-md sticky top-0 z-30">
+          <div>
+            <h1 className="text-lg font-bold text-white tracking-tight">{pageTitle}</h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center">
+              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 pointer-events-none" />
+              <input 
+                type="text" 
+                placeholder="Buscar manifesto, empresa..."
+                className="bg-zinc-900/70 text-xs text-zinc-200 placeholder-zinc-500 pl-8 pr-12 py-1.5 rounded-full border border-zinc-800 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 w-56 transition-all"
+              />
+              <span className="absolute right-2 px-1.5 py-0.5 rounded bg-zinc-800 text-[9px] font-mono text-zinc-400 border border-zinc-700">
+                ⌘K
+              </span>
+            </div>
+
+            <Link 
+              href="/dashboard/notificacoes" 
+              className="relative p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all"
+              title="Notificações"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#07090e]" />
+            </Link>
+
+            <Link 
+              href="/dashboard/manifestos/novo"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold transition-all shadow-md shadow-emerald-500/20 active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Novo MTR
+            </Link>
+          </div>
+        </header>
+
         {children}
       </div>
     </div>
