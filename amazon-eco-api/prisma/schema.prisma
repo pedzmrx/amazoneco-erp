@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum CompanyType {
-  GENERATOR // Fábricas do PIM
-  TRANSPORTER // Empresas de Logística/Balsas
-  DESTINATOR // Recicladoras/Aterros
+  GENERATOR
+  TRANSPORTER
+  DESTINATOR
 }
 
 enum ManifestStatus {
@@ -91,10 +91,10 @@ enum StatusManifesto {
 
 model Manifesto {
   id            String          @id @default(uuid())
-  numeroMtr     String          @unique // Número oficial do documento ambiental
-  empresa       String          // Nome da empresa geradora
-  tipoResiduo   String          // Tipo de material 
-  quantidade    Float           // Peso em Kg ou Toneladas
+  numeroMtr     String          @unique
+  empresa       String
+  tipoResiduo   String
+  quantidade    Float
   status        StatusManifesto @default(EMITIDO)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

@@ -41,11 +41,14 @@ let ManifestosController = class ManifestosController {
     async findAll(search, status) {
         return this.manifestosService.findAll({ search, status });
     }
-    async updateStatus(id, updateStatusDto) {
-        return this.manifestosService.updateStatus(id, updateStatusDto.status);
+    async getStats() {
+        return this.manifestosService.getStats();
     }
     async getMetricas() {
         return this.manifestosService.getMetricas();
+    }
+    async updateStatus(id, updateStatusDto) {
+        return this.manifestosService.updateStatus(id, updateStatusDto.status);
     }
 };
 exports.ManifestosController = ManifestosController;
@@ -66,6 +69,18 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ManifestosController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ManifestosController.prototype, "getStats", null);
+__decorate([
+    (0, common_1.Get)('metricas'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ManifestosController.prototype, "getMetricas", null);
+__decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -73,12 +88,6 @@ __decorate([
     __metadata("design:paramtypes", [String, UpdateManifestoStatusDto]),
     __metadata("design:returntype", Promise)
 ], ManifestosController.prototype, "updateStatus", null);
-__decorate([
-    (0, common_1.Get)('metricas'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ManifestosController.prototype, "getMetricas", null);
 exports.ManifestosController = ManifestosController = __decorate([
     (0, common_1.Controller)('manifestos'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

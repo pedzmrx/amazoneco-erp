@@ -15,6 +15,7 @@ const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const manifestos_module_1 = require("./manifestos/manifestos.module");
 const companies_module_1 = require("./companies/companies.module");
+const waste_items_module_1 = require("./waste-items/waste-items.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -26,6 +27,7 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             manifestos_module_1.ManifestosModule,
             companies_module_1.CompaniesModule,
+            waste_items_module_1.WasteItemsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

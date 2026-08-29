@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WasteItemsController = void 0;
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
 const waste_items_service_1 = require("./waste-items.service");
 const create_waste_item_dto_1 = require("./dto/create-waste-item.dto");
 const update_waste_item_dto_1 = require("./dto/update-waste-item.dto");
@@ -75,5 +76,6 @@ __decorate([
 ], WasteItemsController.prototype, "remove", null);
 exports.WasteItemsController = WasteItemsController = __decorate([
     (0, common_1.Controller)('waste-items'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __metadata("design:paramtypes", [waste_items_service_1.WasteItemsService])
 ], WasteItemsController);

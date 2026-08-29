@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { WasteItemsService } from './waste-items.service';
 import { CreateWasteItemDto } from './dto/create-waste-item.dto';
 import { UpdateWasteItemDto } from './dto/update-waste-item.dto';
 
 @Controller('waste-items')
+@UseGuards(AuthGuard('jwt'))
 export class WasteItemsController {
   constructor(private readonly wasteItemsService: WasteItemsService) {}
 
