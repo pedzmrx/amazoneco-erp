@@ -1,8 +1,15 @@
 {
-  "dependencies": {
-    "bcrypt": "^6.0.0"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0"
+  "name": "amazoneco-erp-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "npm --prefix amazon-eco-api run start:dev",
+    "dev:web": "npm --prefix amazon-eco-web run dev",
+    "build:api": "npm --prefix amazon-eco-api run build",
+    "build:web": "npm --prefix amazon-eco-web run build",
+    "lint:api": "npm --prefix amazon-eco-api run lint",
+    "lint:web": "npm --prefix amazon-eco-web run lint",
+    "test:api": "npm --prefix amazon-eco-api run test",
+    "test:e2e:api": "npm --prefix amazon-eco-api run test:e2e"
   }
 }
