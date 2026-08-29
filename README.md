@@ -81,4 +81,4 @@ Para acessar a plataforma com os dados populados pelo seed:
 
 ## Autor
 Desenvolvido por **Pedro Moraes**  
-[GitHub](https://github.com/pedzmrx) • [LinkedIn](https://www.linkedin.com/)
+[GitHub](https://github.com/pedzmrx) • [LinkedIn](https://www.linkedin.com/in/pedrmrs)
